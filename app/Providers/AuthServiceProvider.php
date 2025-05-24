@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use App\Policies\UserPolicy;
+use App\Models\User;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -13,14 +15,24 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        //
+        User::class => UserPolicy::class,
     ];
 
     /**
      * Register any authentication / authorization services.
      */
-    public function boot(): void
+    public function boot()
     {
-        //
+        $this->registerPolicies();
+
+        // Define gates for role-based access
+        
+        Gate::define('access-admin-dashboard', [UserPolicy::class, 'viewAdminDashboard']);
+        Gate::define('access-alumni-dashboard', [UserPolicy::class, 'viewAlumniDashboard']);
+        Gate::define('access-student-dashboard', [UserPolicy::class, 'viewStudentDashboard']);
+        Gate::define('manage-users', [UserPolicy::class, 'manageUsers']);
+        Gate::define('approve-users', [UserPolicy::class, 'approveUsers']);
+        Gate::define('edit-profile', [UserPolicy::class, 'editProfile']);
+        Gate::define('view-pending-approvals', [UserPolicy::class, 'viewPendingApprovals']);
     }
 }
