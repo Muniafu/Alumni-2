@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
+            $table->string('student_id')->unique()->nullable();
+            $table->year('graduation_year')->nullable();
+            $table->string('program')->nullable();
+            $table->boolean('is_approved')->default(false);
+            $table->foreignId('approved_by')->nullable()->constrained('users');
+            $table->timestamp('approved_at')->nullable();
+            $table->softDeletes();
         });
     }
 
@@ -27,6 +27,16 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn([
+                'student_id',
+                'graduation_year',
+                'program',
+                'is_approved',
+                'approved_by',
+                'approved_at',
+                'deleted_at'
+            ]);
+        });
     }
 };
