@@ -16,8 +16,32 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+
+        if ($user->hasRole('admin')) {
+            return view('profile.edit', [
+                'user' => $user,
+            ]);
+        }
+
+        // Redirect other roles to their specific profile pages
+        if ($user->hasRole('alumni')) {
+            return view('alumni.profile' ,[
+                'user' => $user,
+                'profile' => $user->profile ?? new \App\Models\Profile()
+            ]);
+        }
+
+        if ($user->hasRole('student')) {
+            return view('student.profile', [
+                'user' => $user,
+                'profile' => $user->profile ?? new \App\Models\Profile()
+            ]);
+        }
+
+        // Fallback (shouldn't happen if middleware is working)
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 
@@ -26,13 +50,15 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
