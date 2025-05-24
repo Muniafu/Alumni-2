@@ -4,16 +4,17 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Profile;
+use App\Models\ActivityLog;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
-use App\Models\Profile;
-use App\Models\ActivityLog;
 use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
@@ -54,29 +55,34 @@ class RegisteredUserController extends Controller
             'is_approved' => false,
         ]);
 
-        
-
         // Determine role based on graduation year
         $currentYear = date('Y');
         $role = ($request->graduation_year <= $currentYear) ? 'alumni' : 'student';
         
         $user->assignRole($role);
 
-        // Create empty profile
-        $user->profile()->create([]);
+        try {
+            // Create empty profile
+            $user->profile()->create([]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create profile for user: ' . $user->id, [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
 
         // Log the registration
         ActivityLog::create([
             'user_id' => $user->id,
             'action' => 'register',
             'description' => 'User registered with ' . $role . ' role',
+            'model_type' => User::class,
+            'model_id' => $user->id,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
-
-        return redirect(RouteServiceProvider::HOME);
 
         return redirect()->route('dashboard')->with('success', 'Registration successful! Your account is pending approval.');
     }
