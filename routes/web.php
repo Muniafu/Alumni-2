@@ -9,6 +9,7 @@ use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\JobPostingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,14 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/events/calendar/data', [EventController::class, 'getCalendarEvents'])->name('events.calendar.data');
     Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
     Route::delete('/events/{event}/rsvp', [EventController::class, 'cancelRsvp'])->name('events.rsvp.cancel');
+
+    // Job Postings
+    Route::resource('jobs', JobPostingController::class)->only([
+        'index', 'create', 'store', 'show', 'edit', 'update', 'destroy'
+    ]);
+    Route::post('/jobs/{job}/apply', [JobPostingController::class, 'apply'])->name('jobs.apply');
+    Route::get('/jobs/{job}/applications', [JobPostingController::class, 'applications'])->name('jobs.applications');
+    Route::put('/applications/{application}', [JobPostingController::class, 'updateApplicationStatus'])->name('applications.update');
 
     // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
