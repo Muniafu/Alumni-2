@@ -49,14 +49,14 @@ class UserPolicy
             : Response::deny('You do not have permission to view the student dashboard or you are not approved.');
     }
 
-    public function manageUsers(User $user) 
+    public function manageUsers(User $user)
     {
         return $user->hasRole('admin')
             ? Response::allow()
             : Response::deny('You do not have permission to manage users.');
     }
 
-    public function approveUsers(User $user) 
+    public function approveUsers(User $user)
     {
         return $user->hasRole('admin')
             ? Response::allow()
@@ -76,6 +76,40 @@ class UserPolicy
         return $user->hasRole('admin')
             ? Response::allow()
             : Response::deny('You do not have permission to view pending approvals.');
+    }
+
+    public function create(User $user)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function store(User $user)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function edit(User $user, User $model)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function update(User $user, User $model)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function delete(User $user, User $model)
+    {
+        // Prevent deleting yourself or the last admin
+        if ($user->id === $model->id) {
+            return false;
+        }
+
+        if ($model->hasRole('admin') && User::role('admin')->count() <= 1) {
+            return false;
+        }
+
+        return $user->hasRole('admin');
     }
 
 }
