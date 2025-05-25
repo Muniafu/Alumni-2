@@ -51,7 +51,14 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals'])->name('pending-approvals');
         Route::post('/approve-user/{user}', [AdminController::class, 'approveUser'])->name('approve-user');
         Route::delete('/reject-user/{user}', [AdminController::class, 'rejectUser'])->name('reject-user');
+
+        // User management routes
         Route::get('/user-management', [AdminController::class, 'userManagement'])->name('user-management');
+        Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
+        Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
+        Route::get('/user/{user}/edit', [AdminController::class, 'editUser'])->name('user.edit');
+        Route::put('/user/{user}/update', [AdminController::class, 'updateUser'])->name('user.update');
+        Route::delete('/user/{user}/delete', [AdminController::class, 'deleteUser'])->name('user.delete');
     });
 
     // Alumni routes

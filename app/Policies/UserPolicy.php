@@ -78,38 +78,4 @@ class UserPolicy
             : Response::deny('You do not have permission to view pending approvals.');
     }
 
-    public function create(User $user)
-    {
-        return $user->hasRole('admin');
-    }
-
-    public function store(User $user)
-    {
-        return $user->hasRole('admin');
-    }
-
-    public function edit(User $user, User $model)
-    {
-        return $user->hasRole('admin');
-    }
-
-    public function update(User $user, User $model)
-    {
-        return $user->hasRole('admin');
-    }
-
-    public function delete(User $user, User $model)
-    {
-        // Prevent deleting yourself or the last admin
-        if ($user->id === $model->id) {
-            return false;
-        }
-
-        if ($model->hasRole('admin') && User::role('admin')->count() <= 1) {
-            return false;
-        }
-
-        return $user->hasRole('admin');
-    }
-
 }
