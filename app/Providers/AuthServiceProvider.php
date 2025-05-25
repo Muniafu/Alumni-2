@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\UserPolicy;
+use App\Policies\EventPolicy;
 use App\Models\User;
 
 class AuthServiceProvider extends ServiceProvider
@@ -16,6 +18,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         User::class => UserPolicy::class,
+        Event::class => EventPolicy::class,
     ];
 
     /**
@@ -26,7 +29,7 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // Define gates for role-based access
-        
+
         Gate::define('access-admin-dashboard', [UserPolicy::class, 'viewAdminDashboard']);
         Gate::define('access-alumni-dashboard', [UserPolicy::class, 'viewAlumniDashboard']);
         Gate::define('access-student-dashboard', [UserPolicy::class, 'viewStudentDashboard']);

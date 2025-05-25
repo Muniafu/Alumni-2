@@ -8,6 +8,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EventController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,15 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Event routes
+    Route::resource('events', EventController::class)->only([
+        'index', 'create', 'store', 'show', 'edit', 'update', 'destroy'
+    ]);
+    Route::get('/events/calendar', [EventController::class, 'calendar'])->name('events.calendar');
+    Route::get('/events/calendar/data', [EventController::class, 'getCalendarEvents'])->name('events.calendar.data');
+    Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
+    Route::delete('/events/{event}/rsvp', [EventController::class, 'cancelRsvp'])->name('events.rsvp.cancel');
 
     // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {

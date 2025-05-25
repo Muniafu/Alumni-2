@@ -46,6 +46,10 @@ class AlumniController extends Controller
             'bio' => ['nullable', 'string'],
             'linkedin' => ['nullable', 'url'],
             'twitter' => ['nullable', 'url'],
+            'github' => ['nullable', 'url'],
+            'website' => ['nullable', 'url'],
+            'skills' => ['nullable', 'string'],
+            'interests' => ['nullable', 'string'],
         ]);
 
         $user->update([
@@ -55,6 +59,8 @@ class AlumniController extends Controller
         $socialLinks = [
             'linkedin' => $request->linkedin,
             'twitter' => $request->twitter,
+            'github' => $request->github,
+            'website' => $request->website,
         ];
 
         $profileData = [
@@ -64,12 +70,16 @@ class AlumniController extends Controller
             'company' => $request->company,
             'bio' => $request->bio,
             'social_links' => $socialLinks,
+            'skills' => $request->skills ? array_map('trim', explode(',', $request->skills)) : [],
+            'interests' => $request->interests ? array_map('trim', explode(',', $request->interests)) : [],
         ];
 
         if ($user->profile) {
             $user->profile->update($profileData);
+            $user->profile->calculateCompletion();
         } else {
             $user->profile()->create($profileData);
+            $user->profile->calculateCompletion();
         }
 
         return redirect()->route('alumni.dashboard')
