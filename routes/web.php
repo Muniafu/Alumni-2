@@ -16,6 +16,7 @@ use App\Http\Controllers\ForumCategoryController;
 use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\ForumPostController;
 use App\Http\Controllers\UserSearchController;
+use App\Http\Controllers\MentorshipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -88,7 +89,19 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::resource('posts', ForumPostController::class)->only(['edit', 'update', 'destroy']);
     });
 
-    // User Directory - Added here
+    // Mentorship Routes
+    Route::prefix('mentorship')->name('mentorship.')->group(function () {
+        Route::get('/', [MentorshipController::class, 'index'])->name('index');
+        Route::get('/find', [MentorshipController::class, 'findMentors'])->name('find');
+        Route::get('/mentor/{mentor}', [MentorshipController::class, 'showMentor'])->name('show-mentor');
+        Route::post('/request/{mentor}', [MentorshipController::class, 'sendRequest'])->name('send-request');
+        Route::get('/requests', [MentorshipController::class, 'myRequests'])->name('requests');
+        Route::post('/requests/{mentorshipRequest}/respond', [MentorshipController::class, 'respondToRequest'])->name('respond-to-request');
+        Route::get('/{mentorship}', [MentorshipController::class, 'show'])->name('show');
+        Route::put('/{mentorship}', [MentorshipController::class, 'update'])->name('update');
+    });
+
+    // User Directory
     Route::get('/directory', [UserSearchController::class, 'index'])->name('directory.index');
     Route::get('/directory/{user}', [UserSearchController::class, 'show'])->name('directory.show');
 
