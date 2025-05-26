@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rules;
+use App\Models\Event;
+use App\Models\EventRsvp;
+use App\Models\ForumPost;
+use App\Models\ForumThread;
+use App\Models\JobApplication;
+use App\Models\JobPosting;
+use App\Models\Message;
+use App\Models\Conversation;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -17,11 +26,90 @@ class AdminController extends Controller
     {
         Gate::authorize('access-admin-dashboard');
 
-        $totalUsers = User::count();
-        $pendingApprovals = User::pendingApproval()->count();
-        $recentActivities = ActivityLog::latest()->take(5)->get();
+        // User statistics
+        $userCounts = [
+            'total' => User::count(),
+            'admins' => User::role('admin')->count(),
+            'alumni' => User::role('alumni')->count(),
+            'students' => User::role('student')->count(),
+            'new_last_week' => User::where('created_at', '>=', now()->subWeek())->count(),
+            'pending_approvals' => User::pendingApproval()->count(),
+        ];
 
-        return view('admin.dashboard', compact('totalUsers', 'pendingApprovals', 'recentActivities'));
+        // Event statistics
+        $eventStats = [
+            'total' => Event::count(),
+            'upcoming' => Event::upcoming()->count(),
+            'past' => Event::past()->count(),
+            'rsvps' => EventRsvp::count(),
+            'avg_attendance' => Event::has('rsvps')->withCount('rsvps')->get()->avg('rsvps_count'),
+        ];
+
+        // Job statistics
+        $jobStats = [
+            'total' => JobPosting::count(),
+            'active' => JobPosting::active()->count(),
+            'applications' => JobApplication::count(),
+            'avg_applications' => JobPosting::has('applications')->withCount('applications')->get()->avg('applications_count'),
+        ];
+
+        // Forum statistics
+        $forumStats = [
+            'threads' => ForumThread::count(),
+            'posts' => ForumPost::count(),
+            'recent_posts' => ForumPost::where('created_at', '>=', now()->subWeek())->count(),
+        ];
+
+        // Messaging statistics
+        $messagingStats = [
+            'conversations' => Conversation::count(),
+            'messages' => Message::count(),
+        ];
+
+        // User growth data
+        $userGrowth = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subYear())
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'date' => Carbon::parse($item->date)->format('M Y'),
+                    'count' => $item->count,
+                ];
+            });
+
+        // Event attendance data
+        $eventAttendance = Event::withCount('rsvps')
+            ->where('end', '<', now())
+            ->orderBy('start')
+            ->limit(10)
+            ->get()
+            ->map(function ($event) {
+                return [
+                    'name' => $event->title,
+                    'attendance' => $event->rsvps_count,
+                ];
+            });
+
+        // Recent platform activity
+        $recentActivities = collect()
+            ->merge(Event::with('organizer')->latest()->limit(3)->get())
+            ->merge(JobPosting::with('poster')->latest()->limit(3)->get())
+            ->merge(ForumThread::with('author')->latest()->limit(3)->get())
+            ->sortByDesc('created_at')
+            ->take(5);
+
+        return view('admin.dashboard', compact(
+            'userCounts',
+            'eventStats',
+            'jobStats',
+            'forumStats',
+            'messagingStats',
+            'userGrowth',
+            'eventAttendance',
+            'recentActivities'
+        ));
     }
 
     public function pendingApprovals()

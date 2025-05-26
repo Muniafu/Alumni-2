@@ -23,6 +23,7 @@ return new class extends Migration
             $table->boolean('is_online')->default(false);
             $table->string('meeting_url')->nullable();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->softDeletes();
             $table->timestamps();
         });
 

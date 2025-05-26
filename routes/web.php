@@ -15,6 +15,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\ForumCategoryController;
 use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\ForumPostController;
+use App\Http\Controllers\UserSearchController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,10 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::post('/threads/{thread}/posts', [ForumPostController::class, 'store'])->name('posts.store');
         Route::resource('posts', ForumPostController::class)->only(['edit', 'update', 'destroy']);
     });
+
+    // User Directory - Added here
+    Route::get('/directory', [UserSearchController::class, 'index'])->name('directory.index');
+    Route::get('/directory/{user}', [UserSearchController::class, 'show'])->name('directory.show');
 
     // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
