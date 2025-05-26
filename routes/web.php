@@ -10,6 +10,11 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\ForumCategoryController;
+use App\Http\Controllers\ForumThreadController;
+use App\Http\Controllers\ForumPostController;
 
 /*
 |--------------------------------------------------------------------------
@@ -63,6 +68,24 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('/jobs/{job}/apply', [JobPostingController::class, 'apply'])->name('jobs.apply');
     Route::get('/jobs/{job}/applications', [JobPostingController::class, 'applications'])->name('jobs.applications');
     Route::put('/applications/{application}', [JobPostingController::class, 'updateApplicationStatus'])->name('applications.update');
+
+    // Messaging
+    Route::resource('conversations', ConversationController::class)->only([
+        'index', 'create', 'store', 'show', 'destroy'
+    ]);
+    Route::resource('conversations.messages', MessageController::class)->only([
+        'store', 'destroy'
+    ]);
+
+    // Forum
+    Route::prefix('forum')->name('forum.')->group(function () {
+        Route::get('/', [ForumCategoryController::class, 'index'])->name('index');
+        Route::get('/categories/{category}', [ForumCategoryController::class, 'show'])->name('categories.show');
+
+        Route::resource('threads', ForumThreadController::class)->except(['index']);
+        Route::post('/threads/{thread}/posts', [ForumPostController::class, 'store'])->name('posts.store');
+        Route::resource('posts', ForumPostController::class)->only(['edit', 'update', 'destroy']);
+    });
 
     // Admin routes
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
