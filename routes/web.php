@@ -17,6 +17,7 @@ use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\ForumPostController;
 use App\Http\Controllers\UserSearchController;
 use App\Http\Controllers\MentorshipController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -119,6 +120,11 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::get('/user/{user}/edit', [AdminController::class, 'editUser'])->name('user.edit');
         Route::put('/user/{user}/update', [AdminController::class, 'updateUser'])->name('user.update');
         Route::delete('/user/{user}/delete', [AdminController::class, 'deleteUser'])->name('user.delete');
+
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::post('/generate', [ReportController::class, 'generate'])->name('generate');
+        });
     });
 
     // Alumni routes

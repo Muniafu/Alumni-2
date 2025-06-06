@@ -10,9 +10,20 @@ use App\Models\JobPosting;
 use App\Models\User;
 use Carbon\Carbon;
 use Rap2hpoutre\FastExcel\FastExcel;
+use Illuminate\Support\Facades\Gate;
 
 class ReportController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (Gate::allows('generate-reports')) {
+                abort(403, 'Unauthorized action.');
+            }
+            return $next($request);
+        });
+    }
 
     public function index()
     {

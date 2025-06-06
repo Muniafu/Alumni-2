@@ -10,6 +10,7 @@ use App\Policies\UserPolicy;
 use App\Policies\EventPolicy;
 use App\Models\User;
 use App\Policies\JobPostingPolicy;
+use App\Policies\ReportPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Event::class => EventPolicy::class,
         JobPosting::class => JobPostingPolicy::class,
+        User::class => ReportPolicy::class,
     ];
 
     /**
