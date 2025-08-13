@@ -119,6 +119,9 @@
                         <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                             {{ __('Admin Dashboard') }}
                         </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.permissions')" :active="request()->routeIs('admin.permissions')">
+                            {{ __('Permissions') }}
+                        </x-responsive-nav-link>
                         <x-responsive-nav-link :href="route('admin.pending-approvals')" :active="request()->routeIs('admin.pending-approvals')">
                             {{ __('Pending Approvals') }}
                         </x-responsive-nav-link>
