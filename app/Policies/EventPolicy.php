@@ -17,7 +17,7 @@ class EventPolicy
     public function viewAny(User $user)
     {
         // Allow all users to view events
-        return  true;
+        return $user->hasPermissionTo('view events');
     }
 
     /**
@@ -26,7 +26,7 @@ class EventPolicy
     public function view(User $user, Event $event)
     {
         // Allow all users to view events
-        return true;
+        return $user->hasPermissionTo('create events');
     }
 
     /**
@@ -34,7 +34,7 @@ class EventPolicy
      */
     public function create(User $user)
     {
-        return $user->hasRole(['admin', 'alumni']);
+        return $user->hasPermissionTo('create events');
     }
 
     /**
@@ -43,7 +43,7 @@ class EventPolicy
     public function update(User $user, Event $event)
     {
         // Allow only the organizer or admin to update the event
-        return $user->hasRole('admin') || $event->user_id === $user->id;
+        return $user->hasPermissionTo('edit events') && ($user->hasRole('admin') || $event->user_id === $user->id);
     }
 
     /**
@@ -52,7 +52,7 @@ class EventPolicy
     public function delete(User $user, Event $event)
     {
         // Allow only the organizer or admin to delete the event
-        return $user->hasRole('admin') || $event->user_id === $user->id;
+        return $user->hasPermissionTo('delete events') && ($user->hasRole('admin') || $event->user_id === $user->id);
     }
 
     /**
@@ -60,6 +60,6 @@ class EventPolicy
      */
     public function rsvp(User $user, Event $event)
     {
-        return $user->hasRole(['alumni', 'student']) && !$event->isFull();
+        return $user->hasPermissionTo('rsvp events');
     }
 }

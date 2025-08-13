@@ -42,5 +42,17 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('approve-users', [UserPolicy::class, 'approveUsers']);
         Gate::define('edit-profile', [UserPolicy::class, 'editProfile']);
         Gate::define('view-pending-approvals', [UserPolicy::class, 'viewPendingApprovals']);
+
+        Gate::define('create-jobs', [JobPostingPolicy::class, 'create']);
+        Gate::define('edit-jobs', [JobPostingPolicy::class, 'update']);
+        Gate::define('delete-jobs', [JobPostingPolicy::class, 'delete']);
+        Gate::define('view-job-applications', [JobPostingPolicy::class, 'viewApplications']);
+        Gate::define('manage-job-applications', [JobPostingPolicy::class, 'updateApplications']);
+
+        Gate::define('view-events', [EventPolicy::class, 'viewAny']);
+        Gate::define('create-events', [EventPolicy::class, 'create']);
+        Gate::define('edit-events', [EventPolicy::class, 'update']);
+        Gate::define('delete-events', [EventPolicy::class, 'delete']);
+        Gate::define('rsvp-events', [EventPolicy::class, 'rsvp']);
     }
 }
