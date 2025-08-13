@@ -17,6 +17,7 @@ use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Message;
 use App\Models\Conversation;
+use Spatie\Permission\Models\Permission;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -294,6 +295,42 @@ class AdminController extends Controller
 
         return redirect()->route('admin.user-management')
             ->with('success', 'User deleted successfully');
+    }
+
+    public function permissions()
+    {
+        Gate::authorize('manage-permissions');
+
+        $roles = Role::with('permissions')->get();
+        $permissions = Permission::all();
+
+        return view('admin.permissions', compact('roles', 'permissions'));
+    }
+
+    public function getRolePermissions(Role $role)
+    {
+        Gate::authorize('manage-permissions');
+
+        return response()->json([
+            'permissions' => $role->permissions->pluck('id')
+        ]);
+    }
+
+    public function updatePermissions(Request $request)
+    {
+        Gate::authorize('manage-permissions');
+
+        $request->validate([
+            'role_id' => 'required|exists:roles,id',
+            'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id'
+        ]);
+
+        $role = Role::findOrFail($request->role_id);
+        $role->syncPermissions($request->permissions ?? []);
+
+
+        return back()->with('success', 'Permissions updated successfully');
     }
 
 }

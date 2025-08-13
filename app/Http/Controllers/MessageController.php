@@ -86,6 +86,6 @@ class MessageController extends Controller
 
         return redirect()->route('conversations.show', $conversation)
             ->with('success', 'Message deleted successfully');
-            
+
     }
 }

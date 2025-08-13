@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\ProfileDetailsRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,41 +18,29 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $user = $request->user();
-
-        if ($user->hasRole('admin')) {
-            return view('profile.edit', [
-                'user' => $user,
-            ]);
-        }
-
-        // Redirect other roles to their specific profile pages
-        if ($user->hasRole('alumni')) {
-            return view('alumni.profile' ,[
-                'user' => $user,
-                'profile' => $user->profile ?? new \App\Models\Profile()
-            ]);
-        }
-
-        if ($user->hasRole('student')) {
-            return view('student.profile', [
-                'user' => $user,
-                'profile' => $user->profile ?? new \App\Models\Profile()
-            ]);
-        }
-
-        // Fallback (shouldn't happen if middleware is working)
-        return view('profile.edit', [
-            'user' => $user,
+        $profile = $user->profile ?? $user->profile()->create([
+            'phone' => null,
+            'address' => null,
+            'current_job' => null,
+            'company' => null,
+            'bio' => null,
+            'social_links' => [],
+            'skills' => [],
+            'interests' => [],
+            'profile_completion' => 0,
         ]);
+
+        $profile->calculateCompletion();
+
+        return view('profile.edit', compact('user', 'profile'));
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's basic profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-
         $user->fill($request->validated());
 
         if ($user->isDirty('email')) {
@@ -64,6 +53,47 @@ class ProfileController extends Controller
     }
 
     /**
+     * Update the user's extended profile details.
+     */
+    public function updateDetails(ProfileDetailsRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+        $profileData = $request->validated();
+
+        // Process skills and interests
+        $profileData['skills'] = isset($profileData['skills'])
+            ? array_filter(array_map('trim', explode(',', $profileData['skills'])))
+            : [];
+
+        $profileData['interests'] = isset($profileData['interests'])
+            ? array_filter(array_map('trim', explode(',', $profileData['interests'])))
+            : [];
+
+        // Process social links
+        $socialLinks = [
+            'linkedin' => $profileData['linkedin'] ?? null,
+            'twitter' => $profileData['twitter'] ?? null,
+            'github' => $profileData['github'] ?? null,
+            'website' => $profileData['website'] ?? null,
+        ];
+        $profileData['social_links'] = array_filter($socialLinks);
+
+        // Remove temporary fields
+        unset(
+            $profileData['linkedin'],
+            $profileData['twitter'],
+            $profileData['github'],
+            $profileData['website']
+        );
+
+        // Update or create profile
+        $user->profile()->updateOrCreate([], $profileData);
+        $user->profile->calculateCompletion();
+
+        return Redirect::route('profile.edit')->with('status', 'profile-details-updated');
+    }
+
+    /**
      * Delete the user's account.
      */
     public function destroy(Request $request): RedirectResponse
@@ -73,9 +103,7 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
-
         Auth::logout();
-
         $user->delete();
 
         $request->session()->invalidate();

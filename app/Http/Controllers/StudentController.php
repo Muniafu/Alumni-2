@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
+use App\Models\JobPosting;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Profile;
@@ -10,33 +12,59 @@ use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-        public function dashboard()
+    public function dashboard()
     {
         Gate::authorize('access-student-dashboard');
-
         $user = Auth::user();
-        $profile = $user->profile;
+        $this->ensureProfileExists($user);
 
-        return view('student.dashboard', compact('user', 'profile'));
+        $user->load('profile');
+
+        $canViewEvents = $user->can('view events');
+        $canRSVPEvents = $user->can('rsvp events');
+        $upcomingEvents = [];
+        $recentJobs = [];
+
+        if ($user->can('view events')) {
+            $upcomingEvents = Event::upcoming()
+                ->orderBy('start')
+                ->limit(5)
+                ->get();
+        }
+
+        $recentJobs = JobPosting::active()
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('student.dashboard', [
+            'user' => $user,
+            'profile' => $user->profile,
+            'canViewEvents' => $canViewEvents,
+            'canRSVPEvents' => $canRSVPEvents,
+            'upcomingEvents' => $upcomingEvents,
+            'recentJobs' => $recentJobs
+        ]);
     }
 
     public function editProfile()
     {
         Gate::authorize('edit-profile', Auth::user());
-
         $user = Auth::user();
-        $profile = $user->profile ?? new Profile();
+        $this->ensureProfileExists($user);
 
-        return view('student.profile', compact('user', 'profile'));
+        return view('student.profile', [
+            'user' => $user,
+            'profile' => $user->profile
+        ]);
     }
 
     public function updateProfile(Request $request)
     {
         Gate::authorize('edit-profile', Auth::user());
-
         $user = Auth::user();
 
-        $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:255'],
@@ -45,30 +73,39 @@ class StudentController extends Controller
             'twitter' => ['nullable', 'url'],
         ]);
 
-        $user->update([
-            'name' => $request->name,
-        ]);
+        $user->update(['name' => $validated['name']]);
 
-        $socialLinks = [
-            'linkedin' => $request->linkedin,
-            'twitter' => $request->twitter,
-        ];
-
-        $profileData = [
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'bio' => $request->bio,
-            'social_links' => $socialLinks,
-        ];
-
-        if ($user->profile) {
-            $user->profile->update($profileData);
-        } else {
-            $user->profile()->create($profileData);
-        }
+        $profileData = $this->prepareProfileData($validated);
+        $user->profile()->updateOrCreate([], $profileData);
+        $user->profile->calculateCompletion();
 
         return redirect()->route('student.dashboard')
             ->with('success', 'Profile updated successfully');
     }
 
+    protected function ensureProfileExists(User $user): void
+    {
+        if (!$user->profile) {
+            $user->profile()->create([
+                'phone' => null,
+                'address' => null,
+                'bio' => null,
+                'social_links' => [],
+                'profile_completion' => 0,
+            ]);
+        }
+    }
+
+    protected function prepareProfileData(array $data): array
+    {
+        return [
+            'phone' => $data['phone'],
+            'address' => $data['address'],
+            'bio' => $data['bio'],
+            'social_links' => [
+                'linkedin' => $data['linkedin'],
+                'twitter' => $data['twitter'],
+            ],
+        ];
+    }
 }

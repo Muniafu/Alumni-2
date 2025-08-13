@@ -180,6 +180,7 @@ class EventController extends Controller
      */
     public function rsvp(Request $request, Event $event)
     {
+        $this->authorize('rsvp', Event::class);
         $validated = $request->validate([
             'status' => 'required|in:going,interested,not_going',
             'guests' => 'nullable|integer|min:0',
@@ -203,5 +204,5 @@ class EventController extends Controller
 
         return back()->with('success', 'RSVP cancelled');
     }
-    
+
 }
