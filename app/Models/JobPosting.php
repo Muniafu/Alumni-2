@@ -51,7 +51,11 @@ class JobPosting extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('is_active', true);
+        return $query->where(function($q) {
+            $q->where('application_deadline', '>=', now())
+            ->orWhereNull('application_deadline');
+        })
+        ->where('is_active', true);
     }
 
     public function scopeJobs($query)

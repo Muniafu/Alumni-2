@@ -29,35 +29,67 @@ class Profile extends Model
         'interests' => 'array',
     ];
 
+    protected $attributes = [
+        'social_links' => '[]',
+        'skills' => '[]',
+        'interests' => '[]',
+        'profile_completion' => 0,
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function calculateCompletion()
+    public function calculateCompletion(): int
     {
-        $totalFields = 10;
+        $totalFields = 13; // Total fields we're checking
         $completedFields = 0;
 
-        $fieldsToCheck = [
+        // User fields
+        $userFields = ['name', 'email'];
+        foreach ($userFields as $field) {
+            if (!empty($this->user->$field)) {
+                $completedFields++;
+            }
+        }
+
+        // Profile fields
+        $profileFields = [
             'phone', 'address', 'current_job',
-            'company', 'bio', 'social_links',
-            'skills', 'interests'
+            'company', 'bio'
         ];
 
-        foreach ($fieldsToCheck as $field) {
+        foreach ($profileFields as $field) {
             if (!empty($this->$field)) {
                 $completedFields++;
             }
         }
 
-        // Add 2 for name and profile picture (if implemented)
-        if (!empty($this->user->name)) $completedFields++;
-        // if ($this->user->profile_photo_path) $completedFields++;
+        // Array fields
+        $arrayFields = [
+            'skills' => 1, // Need at least 1 skill
+            'interests' => 1, // Need at least 1 interest
+            'social_links' => 1 // Need at least 1 social link
+        ];
 
-        $this->profile_completion = round(($completedFields / $totalFields) * 100);
+        foreach ($arrayFields as $field => $minCount) {
+            if (!empty($this->$field) && count($this->$field) >= $minCount) {
+                $completedFields++;
+            }
+        }
+
+        // Calculate percentage
+        $completionPercentage = min(100, round(($completedFields / $totalFields) * 100));
+
+        $this->profile_completion = $completionPercentage;
         $this->save();
 
-        return $this->profile_completion;
+        return $completionPercentage;
+    }
+
+    public function getSocialLink($platform)
+    {
+        return $this->social_links[$platform] ?? null;
     }
 }

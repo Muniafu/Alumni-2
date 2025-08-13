@@ -54,5 +54,5 @@ class ForumThread extends Model
     {
         return $query->where('is_pinned', false);
     }
-    
+
 }
