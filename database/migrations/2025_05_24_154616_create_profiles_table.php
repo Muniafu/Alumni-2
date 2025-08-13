@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('company')->nullable();
             $table->text('bio')->nullable();
             $table->json('social_links')->nullable();
+            $table->json('skills') ->default(json_encode([]));
+            $table->json('interests')->default(json_encode([]));
+            $table->unsignedTinyInteger('profile_completion')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
