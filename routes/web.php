@@ -30,6 +30,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
 // Public directory & events (limited info)
 Route::get('/public/directory', [UserSearchController::class, 'publicIndex'])->name('public.directory');
 Route::get('/public/events', [EventController::class, 'publicIndex'])->name('public.events');
@@ -61,12 +62,10 @@ Route::middleware(['auth', 'approved'])->group(function () {
     | Profile Management (All Roles)
     |-----------------------------
     */
-    Route::middleware('permission:edit profile')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::post('/profile/details', [ProfileController::class, 'updateDetails'])->name('profile.details.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    });
 
     /*
     |-----------------------------
