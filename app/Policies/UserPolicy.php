@@ -78,4 +78,10 @@ class UserPolicy
             : Response::deny('You do not have permission to view pending approvals.');
     }
 
+    public function generateReports(User $user)
+    {
+        // Only allow admin users to generate reports
+        return $user->hasRole('admin');
+    }
+
 }

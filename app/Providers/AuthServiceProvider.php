@@ -49,6 +49,8 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('view-job-applications', [JobPostingPolicy::class, 'viewApplications']);
         Gate::define('manage-job-applications', [JobPostingPolicy::class, 'updateApplications']);
 
+        Gate::define('generate-reports', [UserPolicy::class, 'generateReports']);
+
         Gate::define('view-events', [EventPolicy::class, 'viewAny']);
         Gate::define('create-events', [EventPolicy::class, 'create']);
         Gate::define('edit-events', [EventPolicy::class, 'update']);

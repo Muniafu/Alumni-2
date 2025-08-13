@@ -18,7 +18,7 @@ class ReportController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (Gate::allows('generate-reports')) {
+            if (!Gate::allows('generate-reports')) {
                 abort(403, 'Unauthorized action.');
             }
             return $next($request);
@@ -74,9 +74,9 @@ class ReportController extends Controller
                 'Role' => $user->roles->first()->name,
                 'Approved' => $user->is_approved ? 'Yes' : 'No',
                 'Approved At' => $user->approved_at?->format('Y-m-d H:i:s'),
-                'Current Job' => $user->profile->current_job ?? '',
-                'Company' => $user->profile->company ?? '',
-                'Skills' => $user->profile->skills ? implode(', ', $user->profile->skills) : '',
+                'Current Job' => optional($user->profile)->current_job ?? '',
+                'Company' => optional($user->profile)->company ?? '',
+                'Skills' => optional($user->profile)->skills ? implode(', ', $user->profile->skills) : '',
                 'Registered At' => $user->created_at->format('Y-m-d H:i:s'),
                 'Last Login' => $user->last_login_at?->format('Y-m-d H:i:s'),
             ];
