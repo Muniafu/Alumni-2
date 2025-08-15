@@ -11,7 +11,6 @@ class JobPosting extends Model
     use HasFactory, SoftDeletes;
 
 
-
     protected $fillable = [
         'title',
         'description',
@@ -28,7 +27,7 @@ class JobPosting extends Model
         'skills_required',
         'skills_preferred',
         'user_id',
-        'is_active',
+        'is_active'
     ];
 
     protected $casts = [
@@ -36,7 +35,7 @@ class JobPosting extends Model
         'is_active' => 'boolean',
         'skills_required' => 'array',
         'skills_preferred' => 'array',
-        'application_deadline' => 'date',
+        'application_deadline' => 'datetime',
     ];
 
     public function poster()

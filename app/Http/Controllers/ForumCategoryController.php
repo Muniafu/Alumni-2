@@ -19,7 +19,7 @@ class ForumCategoryController extends Controller
             ->orderBy('order')
             ->get();
 
-        return view('forum.index', compact('categories'));
+        return view('forum.categories.index', compact('categories'));
 
     }
 
@@ -52,7 +52,7 @@ class ForumCategoryController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('forum.category', compact('category', 'threads'));
+        return view('forum.categories.show', compact('category', 'threads'));
 
     }
 

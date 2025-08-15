@@ -37,6 +37,9 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('access-admin-dashboard', [UserPolicy::class, 'viewAdminDashboard']);
         Gate::define('access-alumni-dashboard', [UserPolicy::class, 'viewAlumniDashboard']);
+        Gate::define('access-alumni-dashboard', function ($user) {
+            return $user->hasRole('alumni');
+            });
         Gate::define('access-student-dashboard', [UserPolicy::class, 'viewStudentDashboard']);
         Gate::define('manage-users', [UserPolicy::class, 'manageUsers']);
         Gate::define('approve-users', [UserPolicy::class, 'approveUsers']);

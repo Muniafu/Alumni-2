@@ -20,7 +20,7 @@ class ConversationController extends Controller
             ->latest('updated_at')
             ->paginate(10);
 
-        return view('messaging.conversations', compact('conversations'));
+        return view('messaging.index', compact('conversations'));
 
     }
 

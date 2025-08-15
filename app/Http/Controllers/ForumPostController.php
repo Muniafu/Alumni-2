@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ForumPost;
 use App\Models\ForumThread;
+use App\Notifications\NewForumPostNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ForumPostController extends Controller
 {
@@ -38,6 +40,15 @@ class ForumPostController extends Controller
             'user_id' => auth()->id(),
             'content' => $request->content,
         ]);
+
+        // Notify thread subscribers (excluding the post author)
+        $subscribers = $thread->subscribers()->where('user_id', '!=', auth()->id())->get();
+        Notification::send($subscribers, new NewForumPostNotification($post));
+
+        // Also notify thread author if they're not the one posting
+        if ($thread->author_id != auth()->id() && !$thread->subscribers->contains($thread->author_id)) {
+            $thread->author->notify(new NewForumPostNotification($post));
+        }
 
         return redirect()->route('forum.threads.show', [
             'thread' => $thread,

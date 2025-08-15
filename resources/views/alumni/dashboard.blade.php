@@ -129,7 +129,7 @@
                                 @endforeach
                             </div>
                             <div class="mt-4 text-right">
-                                <a href="{{ route('jobs.my-postings') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                <a href="{{ route('jobs.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                     View All Your Postings →
                                 </a>
                             </div>

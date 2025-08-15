@@ -32,12 +32,33 @@ class UserPolicy
     /**
      * Determine whether the user can view the alumni dashboard.
      */
-    public function viewAlumniDashboard(User $user)
+    public function alumniDashboard()
     {
-        return $user->hasRole('alumni') && $user->is_approved
-            ? Response::allow()
-            : Response::deny('You do not have permission to view the alumni dashboard or you are not approved.');
+        $user = auth()->user();
+        $profile = $user->profile;
+
+        // ✅ Fetch only active job postings created by this user
+        $userJobPostings = $user->hasMany(\App\Models\JobPosting::class, 'user_id')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Example: you might also already have $upcomingAlumniEvents loaded somewhere
+        $upcomingAlumniEvents = []; // Replace with actual event query
+
+        return view('alumni.dashboard', compact(
+            'user',
+            'profile',
+            'userJobPostings',
+            'upcomingAlumniEvents'
+        ));
     }
+
+    public function accessAlumniDashboard(User $user)
+    {
+        return $user->hasRole('alumni');
+    }
+
 
     /**
      * Determine whether the user can view the student dashboard.

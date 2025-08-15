@@ -115,4 +115,15 @@ class ForumThreadController extends Controller
             ->with('success', 'Thread deleted successfully');
 
     }
+    public function subscribe(ForumThread $thread)
+    {
+        $thread->subscribe();
+        return back()->with('success', 'You have subscribed to this thread');
+    }
+
+    public function unsubscribe(ForumThread $thread)
+    {
+        $thread->unsubscribe();
+        return back()->with('success', 'You have unsubscribed from this thread');
+    }
 }

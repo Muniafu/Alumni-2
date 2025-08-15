@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\EventRsvp;
 use Illuminate\Support\Facades\Gate;
+use App\Notifications\EventCreatedNotification;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\EventRsvpNotification;
 use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
@@ -33,7 +37,7 @@ class EventController extends Controller
         return view('events.calendar');
     }
 
-    public function getCalenderEvents(Request $request)
+    public function getCalendarEvents(Request $request)
     {
 
         $start = $request->start;
@@ -95,6 +99,11 @@ class EventController extends Controller
         $validated['user_id'] = auth()->id();
 
         $event = Event::create($validated);
+
+        // Notify all users about new event
+        $users = User::where('id', '!=', auth()->id())->get();
+        Notification::send($users, new EventCreatedNotification($event));
+
 
         return redirect()->route('events.show', $event)
             ->with('success', 'Event created successfully');
@@ -191,6 +200,11 @@ class EventController extends Controller
             ['user_id' => auth()->id()],
             $validated
         );
+
+        // Notify event organizer about RSVP
+        if ($event->organizer && $event->organizer->id != auth()->id()) {
+            $event->organizer->notify(new EventRsvpNotification($event, auth()->user(), $validated['status']));
+        }
 
         return back()->with('success', 'RSVP status updated');
     }

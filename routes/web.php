@@ -17,6 +17,7 @@ use App\Http\Controllers\ForumThreadController;
 use App\Http\Controllers\ForumPostController;
 use App\Http\Controllers\UserSearchController;
 use App\Http\Controllers\MentorshipController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 
 
@@ -87,11 +88,18 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::middleware(['can:create jobs'])->group(function () {
         Route::resource('jobs', JobPostingController::class)->except(['index', 'show']);
     });
-    Route::get('jobs', [JobPostingController::class, 'index'])->name('jobs.index');
+    Route::get('/jobs/create', [JobPostingController::class, 'create'])->name('jobs.create');
+    Route::post('/jobs', [JobPostingController::class, 'store'])->name('jobs.store');
+    Route::get('jobs', [JobPostingController::class, 'index'])->name('jobs.index');Route::get('/jobs/my-postings', [JobPostingController::class, 'myPostings'])
+            ->name('jobs.my-posting')
+            ->middleware('role:alumni');
     Route::get('jobs/{job}', [JobPostingController::class, 'show'])->name('jobs.show');
     Route::post('/jobs/{job}/apply', [JobPostingController::class, 'apply'])->name('jobs.apply');
     Route::get('/jobs/{job}/applications', [JobPostingController::class, 'applications'])->middleware('role:admin|alumni')->name('jobs.applications');
     Route::put('/applications/{application}', [JobPostingController::class, 'updateApplicationStatus'])->middleware('role:admin|alumni')->name('applications.update');
+    Route::get('/{application}', [JobPostingController::class, 'showApplication'])->name('jobs.applications.show');
+    Route::put('/{application}', [JobPostingController::class, 'updateApplicationStatus'])->name('jobs.applications.update');
+    Route::get('/', [JobPostingController::class, 'applications'])->name('jobs.applications');
 
     /*
     |-----------------------------
@@ -100,6 +108,14 @@ Route::middleware(['auth', 'approved'])->group(function () {
     */
     Route::resource('conversations', ConversationController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
     Route::resource('conversations.messages', MessageController::class)->only(['store', 'destroy']);
+    Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/conversations/create', [ConversationController::class, 'create'])->name('conversations.create');
+    Route::post('/conversations', [ConversationController::class, 'store'])->name('conversations.store');
+    Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+    Route::delete('/conversations/{conversation}', [ConversationController::class, 'destroy'])->name('conversations.destroy');
+
+    Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->name('messages.store');
+    Route::delete('/messages/{message}', [MessageController::class, 'destroy'])->name('messages.destroy');
 
     /*
     |-----------------------------
@@ -112,7 +128,30 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::resource('threads', ForumThreadController::class)->except(['index']);
         Route::post('/threads/{thread}/posts', [ForumPostController::class, 'store'])->name('posts.store');
         Route::resource('posts', ForumPostController::class)->only(['edit', 'update', 'destroy']);
-    });
+        Route::post('/forum/threads/{thread}/subscribe', [ForumThreadController::class, 'subscribe'])
+        ->name('forum.threads.subscribe')
+        ->middleware('auth');
+        Route::post('/forum/threads/{thread}/unsubscribe', [ForumThreadController::class, 'unsubscribe'])
+        ->name('forum.threads.unsubscribe')
+        ->middleware('auth');
+        });
+
+    /*
+    |-----------------------------
+    | Notification routes
+    |-----------------------------
+    */
+    Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.markAsRead')
+        ->middleware('auth');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])
+        ->name('notifications.all')
+        ->middleware('auth');
+
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.markAllAsRead')
+        ->middleware('auth');
 
     /*
     |-----------------------------
@@ -120,14 +159,14 @@ Route::middleware(['auth', 'approved'])->group(function () {
     |-----------------------------
     */
     Route::prefix('mentorship')->name('mentorship.')->group(function () {
-        Route::get('/', [MentorshipController::class, 'index'])->name('index');
-        Route::get('/find', [MentorshipController::class, 'findMentors'])->name('find');
-        Route::get('/mentor/{mentor}', [MentorshipController::class, 'showMentor'])->name('show-mentor');
-        Route::post('/request/{mentor}', [MentorshipController::class, 'sendRequest'])->name('send-request');
-        Route::get('/requests', [MentorshipController::class, 'myRequests'])->name('requests');
-        Route::post('/requests/{mentorshipRequest}/respond', [MentorshipController::class, 'respondToRequest'])->name('respond-to-request');
-        Route::get('/{mentorship}', [MentorshipController::class, 'show'])->name('show');
-        Route::put('/{mentorship}', [MentorshipController::class, 'update'])->name('update');
+        Route::get('/', [MentorshipController::class, 'index'])->name('mentorship.index');
+        Route::get('/find', [MentorshipController::class, 'findMentors'])->name('mentorship.find');
+        Route::get('/mentor/{mentor}', [MentorshipController::class, 'showMentor'])->name('mentorship.show-mentor');
+        Route::get('/{mentorship}', [MentorshipController::class, 'show'])->name('mentorship.show');
+        Route::post('/request/{mentor}', [MentorshipController::class, 'sendRequest'])->name('mentorship.send-request');
+        Route::get('/requests', [MentorshipController::class, 'myRequests'])->name('mentorship.requests');
+        Route::post('/requests/{mentorshipRequest}/respond', [MentorshipController::class, 'respondToRequest'])->name('mentorship.respond-to-request');
+        Route::put('/{mentorship}', [MentorshipController::class, 'update'])->name('mentorship.update');
     });
 
     /*

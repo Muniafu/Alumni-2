@@ -18,6 +18,8 @@ use App\Models\JobPosting;
 use App\Models\Message;
 use App\Models\Conversation;
 use Spatie\Permission\Models\Permission;
+use App\Notifications\UserApprovedNotification;
+use App\Notifications\UserRejectedNotification;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -140,6 +142,9 @@ class AdminController extends Controller
             'model_id' => $user->id,
         ]);
 
+        // Notify user about approval
+        $user->notify(new UserApprovedNotification());
+
         return redirect()->route('admin.pending-approvals')
             ->with('success', 'User approved successfully');
     }
@@ -157,6 +162,12 @@ class AdminController extends Controller
             'model_type' => User::class,
             'model_id' => $user->id,
         ]);
+
+        // Notify user about rejection before deleting
+        $user->notify(new UserRejectedNotification());
+
+        $user->delete();
+
 
         return redirect()->route('admin.pending-approvals')
             ->with('success', 'User rejected successfully');

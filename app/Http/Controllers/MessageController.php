@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Notifications\NewMessageNotification;
+use Illuminate\Support\Facades\Notification;
 
 class MessageController extends Controller
 {
@@ -43,6 +45,10 @@ class MessageController extends Controller
 
         // Update conversation updated_at to bump it in the list
         $conversation->touch();
+
+        // Notify other participants
+        $recipients = $conversation->users()->where('users.id', '!=', auth()->id())->get();
+        Notification::send($recipients, new NewMessageNotification($message));
 
         return redirect()->route('conversations.show', $conversation)
             ->with('success', 'Message sent successfully');

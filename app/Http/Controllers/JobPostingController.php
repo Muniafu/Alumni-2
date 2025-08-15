@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\JobPosting;
 use Illuminate\Http\Request;
+use App\Models\User;
 use App\Models\JobApplication;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\NewJobPostedNotification;
+use App\Notifications\JobApplicationNotification;
+use App\Notifications\ApplicationStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 use function PHPSTORM_META\type;
 
@@ -45,12 +51,35 @@ class JobPostingController extends Controller
 
     }
 
+    public function show(JobPosting $job)
+    {
+        $userApplication = auth()->check()
+            ? $job->applications()->where('user_id', auth()->id())->first()
+            : null;
+
+        return view('jobs.show', [
+            'job' => $job,
+            'userApplication' => $userApplication
+        ]);
+    }
+
+    public function myPostings()
+    {
+        $jobs = JobPosting::where('user_id', auth()->id())
+            ->withCount('applications')
+            ->latest()
+            ->paginate(10);
+
+        return view('jobs.my-postings', [
+            'jobs' => $jobs
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-
         Gate::authorize('create', JobPosting::class);
 
         $validated = $request->validate([
@@ -70,6 +99,7 @@ class JobPostingController extends Controller
             'skills_preferred' => 'nullable|string',
         ]);
 
+        // Process skills
         $validated['skills_required'] = $request->skills_required
             ? array_map('trim', explode(',', $request->skills_required))
             : null;
@@ -78,13 +108,32 @@ class JobPostingController extends Controller
             ? array_map('trim', explode(',', $request->skills_preferred))
             : null;
 
+        // Add authenticated user ID and default active status
         $validated['user_id'] = auth()->id();
+        $validated['is_active'] = true;
 
-        $job = JobPosting::create($validated);
+        try {
+            $job = JobPosting::create($validated);
 
-        return redirect()->route('jobs.show', $job)
-            ->with('success', 'Job posting created successfully');
+            if (!$job->exists) {
+                throw new \Exception('Failed to save job posting');
+            }
 
+            // Notify admins and students about new job posting
+            $admins = User::role('admin')->get();
+            $students = User::role('student')->get();
+
+            Notification::send($admins, new NewJobPostedNotification($job));
+            Notification::send($students, new NewJobPostedNotification($job));
+
+            return redirect()->route('jobs.show', $job)
+                ->with('success', 'Job posting created successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Job posting creation failed: ' . $e->getMessage());
+            return back()->withInput()
+                ->with('error', 'Failed to create job posting. Please try again.');
+        }
     }
 
     /**
@@ -176,6 +225,11 @@ class JobPostingController extends Controller
             'resume_path' => $resumePath,
         ]);
 
+        // Notify job poster (alumni) and admins about new application
+        $job->poster->notify(new JobApplicationNotification($application));
+        $admins = User::role('admin')->get();
+        Notification::send($admins, new JobApplicationNotification($application));
+
         return redirect()->route('jobs.show', $job)
             ->with('success', 'Application submitted successfully');
 
@@ -189,9 +243,24 @@ class JobPostingController extends Controller
 
         Gate::authorize('viewApplications', $job);
 
-        $applications = $job->applications()->with('applicant')->get();
+        $applications = $job->applications()->with(['applicant' => function($query) {
+            $query->with('profile');
+        }])->latest()->get();
+
         return view('jobs.applications', compact('job', 'applications'));
 
+    }
+
+    /**
+     * Show a single application.
+     */
+    public function showApplication(JobPosting $job, JobApplication $application)
+    {
+        Gate::authorize('viewApplication', [$job, $application]);
+
+        $application->load('applicant.profile');
+
+        return view('jobs.application-show', compact('job', 'application'));
     }
 
     /**
@@ -207,7 +276,13 @@ class JobPostingController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
+        $oldStatus = $application->status;
         $application->update($validated);
+
+        // Notify student if status changed significantly
+        if ($oldStatus !== $application->status && in_array($application->status, ['interviewed', 'hired', 'rejected'])) {
+            $application->applicant->notify(new ApplicationStatusChangedNotification($application, $oldStatus));
+        }
 
         return back()->with('success', 'Application status updated');
 

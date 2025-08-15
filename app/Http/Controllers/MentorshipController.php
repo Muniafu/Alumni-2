@@ -7,6 +7,10 @@ use App\Models\Mentorship;
 use App\Models\MentorshipRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\MentorshipRequestNotification;
+use App\Notifications\MentorshipAcceptedNotification;
+use App\Notifications\MentorshipStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class MentorshipController extends Controller
 {
@@ -15,7 +19,6 @@ class MentorshipController extends Controller
      */
     public function index()
     {
-
         $mentorships = Mentorship::with(['mentor', 'mentee'])
             ->where(function($query) {
                 $query->where('mentor_id', Auth::id())
@@ -25,7 +28,6 @@ class MentorshipController extends Controller
             ->paginate(10);
 
         return view('mentorship.index', compact('mentorships'));
-
     }
 
     /**
@@ -49,31 +51,24 @@ class MentorshipController extends Controller
      */
     public function show(Mentorship $mentorship)
     {
-
         $this->authorize('view', $mentorship);
 
         $mentorship->load(['mentor.profile', 'mentee.profile']);
         return view('mentorship.show', compact('mentorship'));
-
     }
-
 
     public function showMentor(User $mentor)
     {
-
         $mentor->load('profile');
         $existingRequest = MentorshipRequest::where('mentor_id', $mentor->id)
             ->where('mentee_id', Auth::id())
             ->first();
 
         return view('mentorship.show-mentor', compact('mentor', 'existingRequest'));
-
     }
-
 
     public function findMentors()
     {
-
         $mentors = User::role('alumni')
             ->with('profile')
             ->whereHas('profile', function($query) {
@@ -83,7 +78,6 @@ class MentorshipController extends Controller
             ->paginate(15);
 
         return view('mentorship.find-mentors', compact('mentors'));
-
     }
 
     /**
@@ -94,11 +88,8 @@ class MentorshipController extends Controller
         //
     }
 
-
-
     public function sendRequest(Request $request, User $mentor)
     {
-
         $request->validate([
             'message' => 'required|string|min:10|max:1000',
             'goal' => 'required|string|min:10|max:500',
@@ -112,22 +103,22 @@ class MentorshipController extends Controller
             return back()->with('error', 'You have already sent a request to this mentor.');
         }
 
-        MentorshipRequest::create([
+        $mentorshipRequest = MentorshipRequest::create([
             'mentor_id' => $mentor->id,
             'mentee_id' => Auth::id(),
             'message' => $request->message,
             'goal' => $request->goal,
         ]);
 
+        // Notify mentor about the request
+        $mentor->notify(new MentorshipRequestNotification($mentorshipRequest));
+
         return redirect()->route('mentorship.requests.sent')
             ->with('success', 'Mentorship request sent successfully');
-
     }
-
 
     public function myRequests()
     {
-
         $receivedRequests = MentorshipRequest::with(['mentee', 'mentor'])
             ->where('mentor_id', Auth::id())
             ->latest()
@@ -139,14 +130,10 @@ class MentorshipController extends Controller
             ->paginate(10, ['*'], 'sent_page');
 
         return view('mentorship.requests', compact('receivedRequests', 'sentRequests'));
-
     }
-
-
 
     public function respondToRequest(Request $request, MentorshipRequest $mentorshipRequest)
     {
-
         $this->authorize('respond', $mentorshipRequest);
 
         $request->validate([
@@ -157,12 +144,15 @@ class MentorshipController extends Controller
         if ($request->response === 'accept') {
             $mentorshipRequest->update(['status' => 'accepted']);
 
-            Mentorship::create([
+            $mentorship = Mentorship::create([
                 'mentor_id' => $mentorshipRequest->mentor_id,
                 'mentee_id' => $mentorshipRequest->mentee_id,
                 'goal' => $mentorshipRequest->goal,
                 'start_date' => now(),
             ]);
+
+            // Notify mentee about acceptance
+            $mentorshipRequest->mentee->notify(new MentorshipAcceptedNotification($mentorship));
 
             return back()->with('success', 'Mentorship request accepted. A new mentorship has been established.');
         } else {
@@ -173,7 +163,6 @@ class MentorshipController extends Controller
 
             return back()->with('success', 'Mentorship request declined.');
         }
-
     }
 
     /**
@@ -181,7 +170,6 @@ class MentorshipController extends Controller
      */
     public function update(Request $request, Mentorship $mentorship)
     {
-
         $this->authorize('update', $mentorship);
 
         $request->validate([
@@ -189,13 +177,21 @@ class MentorshipController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
+        $oldStatus = $mentorship->status;
+        $newStatus = $request->status;
+
         $mentorship->update([
             'status' => $request->status,
             'end_date' => in_array($request->status, ['completed', 'cancelled']) ? now() : null,
+            'notes' => $request->notes,
         ]);
 
+        // Notify both parties if status changed to completed or cancelled
+        if (in_array($newStatus, ['completed', 'cancelled']) && $oldStatus !== $newStatus) {
+            $mentorship->mentor->notify(new MentorshipStatusChangedNotification($mentorship, $newStatus));
+            $mentorship->mentee->notify(new MentorshipStatusChangedNotification($mentorship, $newStatus));
+        }
+
         return back()->with('success', 'Mentorship updated successfully');
-
     }
-
 }

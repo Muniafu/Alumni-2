@@ -6,6 +6,8 @@ use App\Models\MentorshipRequest;
 use App\Models\Mentorship;
 use App\Http\Requests\StoreMentorshipRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\MentorshipRequestNotification;
+use App\Notifications\MentorshipAcceptedNotification;
 
 class MentorshipRequestController extends Controller
 {
@@ -22,12 +24,15 @@ class MentorshipRequestController extends Controller
 
     public function store(StoreMentorshipRequest $request)
     {
-        MentorshipRequest::create([
+        $mentorshipRequest = MentorshipRequest::create([
             'mentee_id' => Auth::id(),
             'mentor_id' => $request->alumni_id,
             'message' => $request->message,
             'status' => 'pending',
         ]);
+
+        // Notify mentor
+        $mentorshipRequest->mentor->notify(new MentorshipRequestNotification($mentorshipRequest));
 
         return back()->with('success', 'Mentorship request sent.');
     }
@@ -38,12 +43,15 @@ class MentorshipRequestController extends Controller
 
         $mentorshipRequest->update(['status' => 'accepted']);
 
-        Mentorship::create([
-            'mentor_id' => $mentorshipRequest->alumni_id,
-            'mentee_id' => $mentorshipRequest->student_id,
+        $mentorship = Mentorship::create([
+            'mentor_id' => $mentorshipRequest->mentor_id,
+            'mentee_id' => $mentorshipRequest->mentee_id,
             'status' => 'active',
             'start_date' => now(),
         ]);
+
+        // Notify mentee
+        $mentorshipRequest->mentee->notify(new MentorshipAcceptedNotification($mentorship));
 
         return back()->with('success', 'Mentorship request accepted.');
     }

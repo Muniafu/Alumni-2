@@ -54,5 +54,29 @@ class ForumThread extends Model
     {
         return $query->where('is_pinned', false);
     }
+    
+    // Relationships
+    public function subscribers()
+    {
+        return $this->belongsToMany(User::class, 'forum_thread_subscriptions');
+    }
+
+    // Methods
+    public function subscribe($userId = null)
+    {
+        $this->subscribers()->syncWithoutDetaching([$userId ?: auth()->id()]);
+    }
+
+    public function unsubscribe($userId = null)
+    {
+        $this->subscribers()->detach($userId ?: auth()->id());
+    }
+
+    public function isSubscribed($userId = null)
+    {
+        return $this->subscribers()
+            ->where('user_id', $userId ?: auth()->id())
+            ->exists();
+    }
 
 }
