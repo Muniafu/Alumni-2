@@ -3,84 +3,110 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <title>Alumni System</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <style>
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: linear-gradient(to bottom right, #e0f2ff, #ffffff, #e6f7e6);
+            color: #1a1a1a;
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border-top: 0.3rem solid;
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }
+        .cta-btn {
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 1.15rem;
+            padding: 0.75rem 2rem;
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 via-white to-green-50 bg-gray-400 text-gray-800 font-sans antialiased">
-    <div class="min-h-screen flex flex-col justify-center items-center px-6">
+<body>
+
+    <div class="container min-vh-100 d-flex flex-column justify-content-center align-items-center text-center py-5">
 
         <!-- Branding -->
-        <div class="text-center mb-12">
-            <img src="/images/logo.png" alt="Alumni Logo" class="mx-auto h-16 w-16 rounded-full shadow-md mb-4" />
-            <h1 class="text-5xl font-extrabold text-blue-700 tracking-tight">
-                🎓 Alumni Network
-            </h1>
-            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        <div class="mb-5">
+            <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width:80px; height:80px;">
+            <h1 class="display-4 fw-bold text-primary mb-2">🎓 Alumni Network</h1>
+            <p class="lead text-secondary mx-auto" style="max-width:600px;">
                 A global community where connections turn into opportunities —
-                <span class="text-green-600 font-semibold">learn, grow, and thrive together.</span>
+                <span class="text-success fw-semibold">learn, grow, and thrive together.</span>
             </p>
         </div>
 
         <!-- CTA Buttons -->
-        <div class="flex flex-col md:flex-row gap-6 mb-12">
-            <a href="{{ route('login') }}"
-               class="px-8 py-4 bg-blue-600 text-white rounded-2xl shadow-lg hover:bg-blue-700
-                      focus:ring-4 focus:ring-blue-300 focus:outline-none transition text-lg font-semibold">
+        <div class="d-flex flex-column flex-md-row gap-3 mb-5">
+            <a href="{{ route('login') }}" class="btn btn-primary cta-btn shadow">
                 Login
             </a>
-            <a href="{{ route('register') }}"
-               class="px-8 py-4 bg-blue-700 border border-gray-300 text-gray-900 rounded-2xl shadow-lg
-                      hover:bg-gray-300 focus:ring-4 focus:ring-green-300 focus:outline-none
-                      transition text-lg font-semibold">
+            <a href="{{ route('register') }}" class="btn btn-outline-primary cta-btn shadow">
                 Register
             </a>
         </div>
 
         <!-- Feature Highlights -->
-        <div class="mt-20 grid text-center mb-12 grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-6xl">
-            <div class="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg hover:shadow-xl
-                        transition border-t-4 border-blue-600">
-                <h2 class="font-semibold text-xl text-blue-700">📅 Alumni Events</h2>
-                <p class="mt-3 text-gray-700 leading-relaxed">
-                    Stay connected through reunions, workshops, and networking meetups designed to
-                    <span class="text-green-600 font-medium">foster growth and belonging.</span>
-                </p>
+        <div class="row text-center g-4 w-100 justify-content-center">
+            <div class="col-md-4">
+                <div class="glass-card border-top-primary p-4 h-100">
+                    <h3 class="text-primary mb-3">📅 Alumni Events</h3>
+                    <p class="text-secondary">
+                        Stay connected through reunions, workshops, and networking meetups designed to
+                        <span class="text-success fw-medium">foster growth and belonging.</span>
+                    </p>
+                </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg hover:shadow-xl
-                        transition border-t-4 border-green-600">
-                <h2 class="font-semibold text-xl text-green-700">💼 Job Opportunities</h2>
-                <p class="mt-3 text-gray-700 leading-relaxed">
-                    Explore global career opportunities and alumni-driven postings that empower
-                    <span class="text-orange-600 font-medium">your professional journey.</span>
-                </p>
+            <div class="col-md-4">
+                <div class="glass-card border-top-success p-4 h-100">
+                    <h3 class="text-success mb-3">💼 Job Opportunities</h3>
+                    <p class="text-secondary">
+                        Explore global career opportunities and alumni-driven postings that empower
+                        <span class="text-warning fw-medium">your professional journey.</span>
+                    </p>
+                </div>
             </div>
 
-            <div class="bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg hover:shadow-xl
-                        transition border-t-4 border-orange-500">
-                <h2 class="font-semibold text-xl text-orange-600">🤝 Mentorship</h2>
-                <p class="mt-3 text-gray-700 leading-relaxed">
-                    Find or become a mentor to inspire students and alumni alike,
-                    strengthening our <span class="text-blue-600 font-medium">circle of support.</span>
-                </p>
+            <div class="col-md-4">
+                <div class="glass-card border-top-warning p-4 h-100">
+                    <h3 class="text-warning mb-3">🤝 Mentorship</h3>
+                    <p class="text-secondary">
+                        Find or become a mentor to inspire students and alumni alike,
+                        strengthening our <span class="text-primary fw-medium">circle of support.</span>
+                    </p>
+                </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <footer class="mt-24 text-gray-500 text-sm text-center">
+        <footer class="mt-5 text-secondary small text-center">
             <p>&copy; {{ date('Y') }} Alumni System. All rights reserved.</p>
-            <p class="mt-1">
-                <a href="#" class="hover:text-blue-600 underline">Accessibility</a> •
-                <a href="#" class="hover:text-blue-600 underline">Privacy Policy</a>
+            <p>
+                <a href="#" class="text-decoration-underline text-primary">Accessibility</a> •
+                <a href="#" class="text-decoration-underline text-primary">Privacy Policy</a>
             </p>
         </footer>
     </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
