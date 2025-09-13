@@ -23,6 +23,18 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!--  Expose Laravel data to Js -->
+    <script>
+        window.Laravel = {
+            csrfToken: '{{ csrf_token() }}',
+            @auth
+            userId: '{{ auth()->id() }}',
+            @else
+            userId: null,
+            @endauth
+        };
+    </script>
+
     <!-- Notification Sound -->
     <audio id="notificationSound" src="{{ asset('sounds/notification.mp3') }}" preload="auto"></audio>
 </head>
