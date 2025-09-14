@@ -1,139 +1,143 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            User Profile: {{ $user->name }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 class="text-2xl font-bold">{{ $user->name }}</h2>
-                            <p class="text-gray-600">{{ $user->program }} • Class of {{ $user->graduation_year }}</p>
-                            <div class="mt-2">
-                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                                    {{ $user->roles->first()->name }}
-                                </span>
+@section('content')
+<div class="container py-5">
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top-4">
+            <div>
+                <h2 class="h4 mb-0 fw-bold">User Profile: {{ $user->name }}</h2>
+                <p class="mb-0 small text-light">
+                    {{ $user->program }} • Class of {{ $user->graduation_year }}
+                </p>
+            </div>
+            <a href="{{ route('conversations.create', ['recipients' => [$user->id]]) }}"
+               class="btn btn-light text-primary fw-semibold shadow-sm">
+                <i class="bi bi-chat-dots me-1"></i> Send Message
+            </a>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <!-- Left Column -->
+                <div class="col-md-8">
+                    @if($user->profile)
+                        <!-- About -->
+                        @if($user->profile->bio)
+                        <div class="mb-4">
+                            <h3 class="h5 fw-semibold text-dark">About</h3>
+                            <p class="text-muted">{!! nl2br(e($user->profile->bio)) !!}</p>
+                        </div>
+                        @endif
+
+                        <!-- Professional & Skills -->
+                        <div class="row g-4">
+                            @if($user->profile->current_job || $user->profile->company)
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm rounded-3 h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6 fw-bold text-primary mb-3">Professional</h3>
+                                        @if($user->profile->current_job)
+                                        <p class="mb-1">
+                                            <span class="text-muted small">Current Job:</span><br>
+                                            <span class="fw-medium">{{ $user->profile->current_job }}</span>
+                                        </p>
+                                        @endif
+                                        @if($user->profile->company)
+                                        <p class="mb-0">
+                                            <span class="text-muted small">Company:</span><br>
+                                            <span class="fw-medium">{{ $user->profile->company }}</span>
+                                        </p>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <a href="{{ route('conversations.create', ['recipients' => [$user->id]]) }}" class="btn btn-primary">
-                                Send Message
-                            </a>
-                        </div>
-                    </div>
+                            @endif
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                        <div class="md:col-span-2">
-                            @if($user->profile)
-                                @if($user->profile->bio)
-                                <div class="mb-6">
-                                    <h3 class="font-medium text-lg mb-2">About</h3>
-                                    <div class="prose max-w-none">
-                                        {!! nl2br(e($user->profile->bio)) !!}
+                            @if($user->profile->skills || $user->profile->interests)
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm rounded-3 h-100">
+                                    <div class="card-body">
+                                        <h3 class="h6 fw-bold text-success mb-3">Skills & Interests</h3>
+                                        @if($user->profile->skills)
+                                        <div class="mb-3">
+                                            <span class="text-muted small">Skills:</span>
+                                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                                @foreach($user->profile->skills as $skill)
+                                                    <span class="badge bg-primary-subtle text-primary fw-medium px-3 py-2 rounded-pill">{{ $skill }}</span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @endif
+                                        @if($user->profile->interests)
+                                        <div>
+                                            <span class="text-muted small">Interests:</span>
+                                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                                @foreach($user->profile->interests as $interest)
+                                                    <span class="badge bg-purple text-white fw-medium px-3 py-2 rounded-pill">{{ $interest }}</span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
-                                @endif
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    @if($user->profile->current_job || $user->profile->company)
-                                    <div>
-                                        <h3 class="font-medium text-lg mb-2">Professional</h3>
-                                        <div class="space-y-2">
-                                            @if($user->profile->current_job)
-                                            <div>
-                                                <span class="text-gray-500 block text-sm">Current Job</span>
-                                                <span class="font-medium">{{ $user->profile->current_job }}</span>
-                                            </div>
-                                            @endif
-                                            @if($user->profile->company)
-                                            <div>
-                                                <span class="text-gray-500 block text-sm">Company</span>
-                                                <span class="font-medium">{{ $user->profile->company }}</span>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @endif
-
-                                    @if($user->profile->skills || $user->profile->interests)
-                                    <div>
-                                        <h3 class="font-medium text-lg mb-2">Skills & Interests</h3>
-                                        <div class="space-y-2">
-                                            @if($user->profile->skills)
-                                            <div>
-                                                <span class="text-gray-500 block text-sm">Skills</span>
-                                                <div class="flex flex-wrap gap-2 mt-1">
-                                                    @foreach($user->profile->skills as $skill)
-                                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">{{ $skill }}</span>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                            @endif
-                                            @if($user->profile->interests)
-                                            <div>
-                                                <span class="text-gray-500 block text-sm">Interests</span>
-                                                <div class="flex flex-wrap gap-2 mt-1">
-                                                    @foreach($user->profile->interests as $interest)
-                                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-sm rounded">{{ $interest }}</span>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    @endif
-                                </div>
-                            @else
-                                <p class="text-gray-500">No profile information available.</p>
+                            </div>
                             @endif
                         </div>
+                    @else
+                        <p class="text-muted fst-italic">No profile information available.</p>
+                    @endif
+                </div>
 
-                        <div>
-                            <div class="bg-gray-50 p-4 rounded-lg sticky top-4">
-                                <h3 class="font-medium text-lg mb-3">Contact Information</h3>
-                                <div class="space-y-3">
-                                    <div>
-                                        <span class="text-gray-500 block text-sm">Email</span>
-                                        <a href="mailto:{{ $user->email }}" class="font-medium text-blue-600">{{ $user->email }}</a>
-                                    </div>
-                                    @if($user->profile && $user->profile->phone)
-                                    <div>
-                                        <span class="text-gray-500 block text-sm">Phone</span>
-                                        <span class="font-medium">{{ $user->profile->phone }}</span>
-                                    </div>
-                                    @endif
-                                    @if($user->profile && $user->profile->address)
-                                    <div>
-                                        <span class="text-gray-500 block text-sm">Address</span>
-                                        <span class="font-medium">{{ $user->profile->address }}</span>
-                                    </div>
-                                    @endif
-                                </div>
-
-                                @if($user->profile && $user->profile->social_links)
-                                <div class="mt-4 pt-4 border-t">
-                                    <h3 class="font-medium text-lg mb-3">Social Links</h3>
-                                    <div class="space-y-2">
-                                        @foreach($user->profile->social_links as $platform => $url)
-                                            @if($url)
-                                            <div>
-                                                <span class="text-gray-500 block text-sm capitalize">{{ $platform }}</span>
-                                                <a href="{{ $url }}" target="_blank" class="font-medium text-blue-600">{{ $url }}</a>
-                                            </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                </div>
+                <!-- Right Column -->
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top: 80px;">
+                        <div class="card-body">
+                            <h3 class="h6 fw-bold text-dark mb-3">Contact Information</h3>
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <span class="text-muted small d-block">Email</span>
+                                    <a href="mailto:{{ $user->email }}"
+                                       class="fw-medium text-decoration-none text-primary">
+                                        {{ $user->email }}
+                                    </a>
+                                </li>
+                                @if($user->profile && $user->profile->phone)
+                                <li class="mb-3">
+                                    <span class="text-muted small d-block">Phone</span>
+                                    <span class="fw-medium">{{ $user->profile->phone }}</span>
+                                </li>
                                 @endif
+                                @if($user->profile && $user->profile->address)
+                                <li>
+                                    <span class="text-muted small d-block">Address</span>
+                                    <span class="fw-medium">{{ $user->profile->address }}</span>
+                                </li>
+                                @endif
+                            </ul>
+
+                            @if($user->profile && $user->profile->social_links)
+                            <div class="pt-3 border-top mt-3">
+                                <h3 class="h6 fw-bold text-dark mb-3">Social Links</h3>
+                                <ul class="list-unstyled">
+                                    @foreach($user->profile->social_links as $platform => $url)
+                                        @if($url)
+                                        <li class="mb-2">
+                                            <span class="text-muted small d-block text-capitalize">{{ $platform }}</span>
+                                            <a href="{{ $url }}" target="_blank"
+                                               class="fw-medium text-decoration-none text-success">
+                                                {{ $url }}
+                                            </a>
+                                        </li>
+                                        @endif
+                                    @endforeach
+                                </ul>
                             </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection
