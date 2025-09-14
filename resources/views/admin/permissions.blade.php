@@ -1,77 +1,86 @@
-<x-admin-layout>
-    <x-slot name="header">
-        <h2 class="fw-semibold fs-4 text-dark">
-            {{ __('Permissions Management') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="container-fluid py-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <form action="{{ route('admin.permissions.update') }}" method="POST">
-                    @csrf
+@section('header')
+<h2 class="fw-semibold fs-4 text-dark">
+    <i class="bi bi-shield-lock text-primary me-2"></i> {{ __('Permissions Management') }}
+</h2>
+@endsection
 
-                    {{-- Role Selection --}}
-                    <div class="mb-4">
-                        <label for="role_id" class="form-label fw-semibold">
-                            <i class="bi bi-person-badge me-1 text-primary"></i> Select Role
-                        </label>
-                        <select name="role_id" id="role_id" class="form-select" required>
-                            <option value="">Select a Role</option>
-                            @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+@section('content')
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <form action="{{ route('admin.permissions.update') }}" method="POST">
+                @csrf
 
-                    {{-- Permissions Grid --}}
-                    <div class="row g-3">
-                        @foreach($permissions as $permission)
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input id="permission-{{ $permission->id }}"
-                                           name="permissions[]"
-                                           type="checkbox"
-                                           value="{{ $permission->id }}"
-                                           class="form-check-input">
-                                    <label for="permission-{{ $permission->id }}" class="form-check-label text-muted">
-                                        {{ ucfirst($permission->name) }}
-                                    </label>
-                                </div>
-                            </div>
+                {{-- Role Selection --}}
+                <div class="mb-4">
+                    <label for="role_id" class="form-label fw-semibold">
+                        <i class="bi bi-person-badge me-1 text-primary"></i> Select Role
+                    </label>
+                    <select name="role_id" id="role_id"
+                            class="form-select @error('role_id') is-invalid @enderror" required>
+                        <option value="">Select a Role</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
                         @endforeach
-                    </div>
+                    </select>
+                    @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
 
-                    {{-- Submit Button --}}
-                    <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success shadow-sm">
-                            <i class="bi bi-shield-lock-fill me-2"></i> Update Permissions
-                        </button>
-                    </div>
-                </form>
-            </div>
+                {{-- Permissions Grid --}}
+                <div class="row g-3">
+                    @forelse($permissions as $permission)
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input id="permission-{{ $permission->id }}"
+                                       name="permissions[]"
+                                       type="checkbox"
+                                       value="{{ $permission->id }}"
+                                       class="form-check-input">
+                                <label for="permission-{{ $permission->id }}" class="form-check-label text-muted">
+                                    {{ ucfirst($permission->name) }}
+                                </label>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-12">
+                            <p class="text-muted fst-italic">No permissions found.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Submit Button --}}
+                <div class="mt-4 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success shadow-sm px-4">
+                        <i class="bi bi-shield-lock-fill me-2"></i> Update Permissions
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+@endsection
 
-    @push('scripts')
-    <script>
-        document.getElementById('role_id').addEventListener('change', function() {
-            const roleId = this.value;
-            if (!roleId) return;
+@push('scripts')
+<script>
+    document.getElementById('role_id').addEventListener('change', function() {
+        const roleId = this.value;
+        if (!roleId) return;
 
-            fetch(`/admin/permissions/${roleId}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Reset checkboxes
-                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+        fetch(`/admin/permissions/${roleId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Reset all checkboxes
+                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
 
-                    // Check the permissions the role has
-                    data.permissions.forEach(permissionId => {
-                        const checkbox = document.getElementById(`permission-${permissionId}`);
-                        if (checkbox) checkbox.checked = true;
-                    });
+                // Check permissions assigned to role
+                data.permissions.forEach(permissionId => {
+                    const checkbox = document.getElementById(`permission-${permissionId}`);
+                    if (checkbox) checkbox.checked = true;
                 });
-        });
-    </script>
-    @endpush
-</x-admin-layout>
+            })
+            .catch(() => alert('Failed to fetch role permissions. Please try again.'));
+    });
+</script>
+@endpush
