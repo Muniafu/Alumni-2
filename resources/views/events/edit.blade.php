@@ -1,110 +1,152 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Event') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <form method="POST" action="{{ route('events.update', $event) }}" enctype="multipart/form-data">
-                        @csrf
-                        @method('PUT')
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Event
+    </h2>
+</div>
+@endsection
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Title -->
-                            <div>
-                                <x-input-label for="title" :value="__('Title')" />
-                                <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title', $event->title)" required autofocus />
-                                <x-input-error :messages="$errors->get('title')" class="mt-2" />
-                            </div>
+@section('content')
+<div class="row justify-content-center my-4">
+    <div class="col-lg-10">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form method="POST" action="{{ route('events.update', $event) }}" enctype="multipart/form-data" novalidate>
+                    @csrf
+                    @method('PUT')
 
-                            <!-- Description -->
-                            <div class="md:col-span-2">
-                                <x-input-label for="description" :value="__('Description')" />
-                                <x-text-area id="description" class="block mt-1 w-full" name="description">{{ old('description', $event->description) }}</x-text-area>
-                                <x-input-error :messages="$errors->get('description')" class="mt-2" />
-                            </div>
+                    <div class="row g-4">
+                        <!-- Title -->
+                        <div class="col-md-6">
+                            <label for="title" class="form-label fw-medium">Title <span class="text-danger">*</span></label>
+                            <input type="text" id="title" name="title"
+                                   class="form-control @error('title') is-invalid @enderror"
+                                   value="{{ old('title', $event->title) }}" required autofocus>
+                            @error('title')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Start Date/Time -->
-                            <div>
-                                <x-input-label for="start" :value="__('Start Date & Time')" />
-                                <x-text-input id="start" class="block mt-1 w-full" type="datetime-local" name="start"
-                                    value="{{ old('start', $event->start->format('Y-m-d\TH:i')) }}" required />
-                                <x-input-error :messages="$errors->get('start')" class="mt-2" />
-                            </div>
+                        <!-- Start Date/Time -->
+                        <div class="col-md-6">
+                            <label for="start" class="form-label fw-medium">Start Date & Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" id="start" name="start"
+                                   class="form-control @error('start') is-invalid @enderror"
+                                   value="{{ old('start', $event->start->format('Y-m-d\TH:i')) }}" required>
+                            @error('start')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- End Date/Time -->
-                            <div>
-                                <x-input-label for="end" :value="__('End Date & Time')" />
-                                <x-text-input id="end" class="block mt-1 w-full" type="datetime-local" name="end"
-                                    value="{{ old('end', $event->end->format('Y-m-d\TH:i')) }}" required />
-                                <x-input-error :messages="$errors->get('end')" class="mt-2" />
-                            </div>
+                        <!-- End Date/Time -->
+                        <div class="col-md-6">
+                            <label for="end" class="form-label fw-medium">End Date & Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" id="end" name="end"
+                                   class="form-control @error('end') is-invalid @enderror"
+                                   value="{{ old('end', $event->end->format('Y-m-d\TH:i')) }}" required>
+                            @error('end')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Location -->
-                            <div>
-                                <x-input-label for="location" :value="__('Location')" />
-                                <x-text-input id="location" class="block mt-1 w-full" type="text" name="location" :value="old('location', $event->location)" />
-                                <x-input-error :messages="$errors->get('location')" class="mt-2" />
-                            </div>
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label for="location" class="form-label fw-medium">Location</label>
+                            <input type="text" id="location" name="location"
+                                   class="form-control @error('location') is-invalid @enderror"
+                                   value="{{ old('location', $event->location) }}">
+                            @error('location')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Capacity -->
-                            <div>
-                                <x-input-label for="capacity" :value="__('Capacity (leave blank for unlimited)')" />
-                                <x-text-input id="capacity" class="block mt-1 w-full" type="number" name="capacity" :value="old('capacity', $event->capacity)" min="1" />
-                                <x-input-error :messages="$errors->get('capacity')" class="mt-2" />
-                            </div>
+                        <!-- Capacity -->
+                        <div class="col-md-6">
+                            <label for="capacity" class="form-label fw-medium">Capacity (leave blank for unlimited)</label>
+                            <input type="number" id="capacity" name="capacity" min="1"
+                                   class="form-control @error('capacity') is-invalid @enderror"
+                                   value="{{ old('capacity', $event->capacity) }}">
+                            @error('capacity')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Image -->
-                            <div>
-                                <x-input-label for="image" :value="__('Event Image')" />
-                                @if($event->image)
-                                    <div class="mb-2">
-                                        <img src="{{ Storage::url($event->image) }}" alt="Current event image" class="h-32 rounded">
-                                    </div>
-                                @endif
-                                <x-file-input id="image" class="block mt-1 w-full" name="image" />
-                                <x-input-error :messages="$errors->get('image')" class="mt-2" />
-                            </div>
+                        <!-- Image -->
+                        <div class="col-md-6">
+                            <label for="image" class="form-label fw-medium">Event Image</label>
+                            @if($event->image)
+                                <div class="mb-2">
+                                    <img src="{{ Storage::url($event->image) }}"
+                                         alt="Current event image"
+                                         class="img-thumbnail shadow-sm" style="max-height: 120px;">
+                                </div>
+                            @endif
+                            <input type="file" id="image" name="image"
+                                   class="form-control @error('image') is-invalid @enderror">
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Online Event -->
-                            <div class="flex items-center">
-                                <x-checkbox-input id="is_online" name="is_online" :checked="old('is_online', $event->is_online)" />
-                                <x-input-label for="is_online" :value="__('This is an online event')" class="ml-2" />
-                            </div>
-
-                            <!-- Meeting URL (shown only if online event is checked) -->
-                            <div id="meeting_url_container" class="{{ $event->is_online ? '' : 'hidden' }}">
-                                <x-input-label for="meeting_url" :value="__('Meeting URL')" />
-                                <x-text-input id="meeting_url" class="block mt-1 w-full" type="url" name="meeting_url" :value="old('meeting_url', $event->meeting_url)" />
-                                <x-input-error :messages="$errors->get('meeting_url')" class="mt-2" />
+                        <!-- Online Event Checkbox -->
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input type="checkbox" id="is_online" name="is_online"
+                                       class="form-check-input"
+                                       {{ old('is_online', $event->is_online) ? 'checked' : '' }}>
+                                <label for="is_online" class="form-check-label">This is an online event</label>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end mt-6">
-                            <x-primary-button>
-                                {{ __('Update Event') }}
-                            </x-primary-button>
+                        <!-- Meeting URL -->
+                        <div class="col-12" id="meeting_url_container" style="{{ $event->is_online ? '' : 'display:none;' }}">
+                            <label for="meeting_url" class="form-label fw-medium">Meeting URL</label>
+                            <input type="url" id="meeting_url" name="meeting_url"
+                                   class="form-control @error('meeting_url') is-invalid @enderror"
+                                   value="{{ old('meeting_url', $event->meeting_url) }}">
+                            @error('meeting_url')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-                    </form>
-                </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label for="description" class="form-label fw-medium">Description</label>
+                            <textarea id="description" name="description" rows="4"
+                                      class="form-control @error('description') is-invalid @enderror">{{ old('description', $event->description) }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fa-solid fa-save me-2"></i> Update Event
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
+@endsection
 
-    @push('scripts')
-        <script>
-            document.getElementById('is_online').addEventListener('change', function() {
-                const meetingUrlContainer = document.getElementById('meeting_url_container');
-                if (this.checked) {
-                    meetingUrlContainer.classList.remove('hidden');
-                } else {
-                    meetingUrlContainer.classList.add('hidden');
-                }
-            });
-        </script>
-    @endpush
-</x-app-layout>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkbox = document.getElementById('is_online');
+        const meetingUrlContainer = document.getElementById('meeting_url_container');
+
+        function toggleMeetingUrl() {
+            meetingUrlContainer.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        checkbox.addEventListener('change', toggleMeetingUrl);
+        toggleMeetingUrl(); // init
+    });
+</script>
+@endpush
