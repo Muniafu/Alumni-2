@@ -1,30 +1,41 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Post
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+@section('header')
+<h2 class="fw-semibold text-primary mb-0">
+    Edit Post
+</h2>
+@endsection
+
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
                 <form method="POST" action="{{ route('forum.posts.update', $post) }}">
                     @csrf
                     @method('PUT')
+
+                    <!-- Post Content -->
                     <div class="mb-4">
-                        <label for="content" class="block text-gray-700 text-sm font-bold mb-2">
+                        <label for="content" class="form-label fw-bold text-secondary">
                             Post Content
                         </label>
                         <textarea name="content" id="content" rows="10" required
-                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ old('content', $post->content) }}</textarea>
+                                  class="form-control">{{ old('content', $post->content) }}</textarea>
+                        @error('content')
+                            <div class="text-danger small mt-1">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                    <div class="flex items-center justify-end space-x-4">
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('forum.threads.show', $post->thread) }}"
-                           class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                           class="btn btn-outline-secondary">
                             Cancel
                         </a>
-                        <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        <button type="submit" class="btn btn-primary">
                             Update Post
                         </button>
                     </div>
@@ -32,4 +43,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

@@ -1,52 +1,66 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ $category->name }} - Threads
-            </h2>
-            @can('create', App\Models\ForumThread::class)
-                <a href="{{ route('forum.threads.create', $category) }}"
-                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                    New Thread
-                </a>
-            @endcan
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @foreach($threads as $thread)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-4 p-6">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <a href="{{ route('forum.threads.show', $thread) }}"
-                               class="text-lg font-bold text-blue-600 hover:text-blue-800">
-                                @if($thread->is_pinned)
-                                    📌 {{ $thread->title }}
-                                @else
-                                    {{ $thread->title }}
-                                @endif
-                            </a>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Started by {{ $thread->author->name }} •
-                                {{ $thread->created_at->diffForHumans() }}
-                            </p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-sm text-gray-500">
-                                {{ $thread->posts_count }} {{ Str::plural('reply', $thread->posts_count) }}
-                            </span>
-                            @if($thread->latestPost)
-                                <div class="text-xs text-gray-400">
-                                    Last reply {{ $thread->latestPost->created_at->diffForHumans() }}
-                                </div>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        {{ $category->name }} - Threads
+    </h2>
+    @can('create', App\Models\ForumThread::class)
+        <a href="{{ route('forum.threads.create', $category) }}"
+           class="btn btn-primary btn-sm shadow-sm">
+            <i class="fa-solid fa-plus me-1"></i> New Thread
+        </a>
+    @endcan
+</div>
+@endsection
+
+@section('content')
+<div class="row mt-4 g-4">
+    @forelse($threads as $thread)
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <!-- Thread Info -->
+                    <div>
+                        <a href="{{ route('forum.threads.show', $thread) }}"
+                           class="h5 text-primary text-decoration-none">
+                            @if($thread->is_pinned)
+                                📌 {{ $thread->title }}
+                            @else
+                                {{ $thread->title }}
                             @endif
-                        </div>
+                        </a>
+                        <p class="text-muted small mb-0 mt-1">
+                            Started by <span class="fw-medium">{{ $thread->author->name }}</span> •
+                            {{ $thread->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+
+                    <!-- Thread Stats -->
+                    <div class="text-end">
+                        <span class="badge bg-secondary mb-1">
+                            {{ $thread->posts_count }} {{ Str::plural('reply', $thread->posts_count) }}
+                        </span>
+                        @if($thread->latestPost)
+                            <div class="text-muted small">
+                                Last reply {{ $thread->latestPost->created_at->diffForHumans() }}
+                            </div>
+                        @endif
                     </div>
                 </div>
-            @endforeach
-
-            {{ $threads->links() }}
+            </div>
         </div>
-    </div>
-</x-app-layout>
+    @empty
+        <div class="col-12">
+            <div class="alert alert-info shadow-sm">
+                No threads found in this category.
+            </div>
+        </div>
+    @endforelse
+</div>
+
+<!-- Pagination -->
+<div class="mt-4">
+    {{ $threads->links('pagination::bootstrap-5') }}
+</div>
+@endsection

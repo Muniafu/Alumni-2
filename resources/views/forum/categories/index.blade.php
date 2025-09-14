@@ -1,44 +1,58 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Forum Categories
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @foreach($categories as $category)
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 p-6">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <a href="{{ route('forum.categories.show', $category) }}"
-                               class="text-xl font-bold text-blue-600 hover:text-blue-800">
-                                {{ $category->name }}
-                            </a>
-                            <p class="text-gray-600 mt-2">{{ $category->description }}</p>
-                            <div class="mt-2 text-sm text-gray-500">
-                                <span>{{ $category->threads_count }} threads</span>
-                                <span class="mx-2">•</span>
-                                <span>{{ $category->posts_count }} posts</span>
-                            </div>
-                        </div>
-                        @if($category->latestThread)
-                            <div class="text-right">
-                                <div class="text-sm text-gray-500">
-                                    Latest:
-                                    <a href="{{ route('forum.threads.show', $category->latestThread) }}"
-                                       class="text-blue-600 hover:text-blue-800">
-                                        {{ Str::limit($category->latestThread->title, 30) }}
-                                    </a>
-                                </div>
-                                <div class="text-xs text-gray-400">
-                                    {{ $category->latestThread->created_at->diffForHumans() }}
-                                </div>
-                            </div>
-                        @endif
+@section('header')
+<h2 class="fw-semibold text-primary mb-0">
+    Forum Categories
+</h2>
+@endsection
+
+@section('content')
+<div class="row g-4 mt-4">
+    @forelse($categories as $category)
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex justify-content-between align-items-start flex-wrap">
+                    <!-- Category Info -->
+                    <div>
+                        <a href="{{ route('forum.categories.show', $category) }}"
+                           class="h5 text-primary text-decoration-none">
+                            {{ $category->name }}
+                        </a>
+                        <p class="text-muted mt-1 mb-1">
+                            {{ $category->description }}
+                        </p>
+                        <small class="text-secondary">
+                            {{ $category->threads_count }} {{ Str::plural('thread', $category->threads_count) }}
+                            &bull;
+                            {{ $category->posts_count }} {{ Str::plural('post', $category->posts_count) }}
+                        </small>
                     </div>
+
+                    <!-- Latest Thread Info -->
+                    @if($category->latestThread)
+                        <div class="text-end mt-2 mt-md-0">
+                            <small class="text-muted">Latest:</small>
+                            <div>
+                                <a href="{{ route('forum.threads.show', $category->latestThread) }}"
+                                   class="text-warning text-decoration-none fw-medium"
+                                   title="{{ $category->latestThread->title }}">
+                                    {{ Str::limit($category->latestThread->title, 30) }}
+                                </a>
+                            </div>
+                            <small class="text-muted d-block">
+                                {{ $category->latestThread->created_at->diffForHumans() }}
+                            </small>
+                        </div>
+                    @endif
                 </div>
-            @endforeach
+            </div>
         </div>
-    </div>
-</x-app-layout>
+    @empty
+        <div class="col-12">
+            <div class="alert alert-info shadow-sm">
+                No categories available.
+            </div>
+        </div>
+    @endforelse
+</div>
+@endsection
