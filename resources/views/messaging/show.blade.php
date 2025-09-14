@@ -1,62 +1,85 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Conversation') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="mb-4">
-                        <h3 class="text-lg font-semibold">
-                            @foreach($conversation->otherUsers as $user)
-                                {{ $user->name }}
-                                @if(!$loop->last), @endif
-                            @endforeach
-                        </h3>
-                        @if($conversation->subject)
-                            <p class="text-gray-600">{{ $conversation->subject }}</p>
-                        @endif
-                    </div>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-comments me-2"></i> Conversation
+    </h2>
+</div>
+@endsection
 
-                    <div class="space-y-4 mb-6">
-                        @foreach($messages as $message)
-                            <div class="flex {{ $message->sender->id === auth()->id() ? 'justify-end' : 'justify-start' }}">
-                                <div class="{{ $message->sender->id === auth()->id() ? 'bg-blue-100' : 'bg-gray-100' }} rounded-lg p-3 max-w-xs lg:max-w-md">
-                                    <div class="flex items-center mb-1">
-                                        <span class="font-semibold">{{ $message->sender->name }}</span>
-                                        <span class="text-xs text-gray-500 ml-2">
-                                            {{ $message->created_at->diffForHumans() }}
-                                        </span>
-                                    </div>
-                                    <p class="text-gray-800">{{ $message->body }}</p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8">
 
-                    <div class="mt-4">
-                        {{ $messages->links() }}
-                    </div>
-
-                    <form method="POST" action="{{ route('messages.store', $conversation) }}" class="mt-6">
-                        @csrf
-                        <div class="mb-4">
-                            <textarea name="body" rows="3" required
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="Type your message here..."></textarea>
-                        </div>
-                        <div class="flex justify-end">
-                            <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                Send Message
-                            </button>
-                        </div>
-                    </form>
-                </div>
+        <!-- Conversation Header -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="fw-semibold mb-1">
+                    @foreach($conversation->otherUsers as $user)
+                        {{ $user->name }}@if(!$loop->last), @endif
+                    @endforeach
+                </h5>
+                @if($conversation->subject)
+                    <p class="text-muted mb-0">{{ $conversation->subject }}</p>
+                @endif
             </div>
         </div>
+
+        <!-- Messages Container -->
+        <div class="card shadow-sm border-0 mb-4" style="height: 500px; overflow-y: auto;">
+            <div class="card-body d-flex flex-column gap-3">
+                @forelse($messages as $message)
+                    <div class="d-flex {{ $message->sender->id === auth()->id() ? 'justify-content-end' : 'justify-content-start' }}">
+                        <div class="p-3 rounded shadow-sm
+                            {{ $message->sender->id === auth()->id() ? 'bg-primary text-white' : 'bg-light text-dark' }}"
+                            style="max-width: 75%;">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="fw-bold">{{ $message->sender->name }}</span>
+                                <small class="text-muted ms-2">{{ $message->created_at->diffForHumans() }}</small>
+                            </div>
+                            <p class="mb-0">{{ $message->body }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-center text-muted mt-3">No messages yet. Start the conversation!</p>
+                @endforelse
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mb-3">
+            {{ $messages->links() }}
+        </div>
+
+        <!-- Send Message Form -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form method="POST" action="{{ route('messages.store', $conversation) }}">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="body" class="form-label visually-hidden">Message</label>
+                        <textarea id="body" name="body" rows="3" class="form-control" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
-</x-app-layout>
+</div>
+
+@push('scripts')
+<script>
+    // Auto-scroll to the bottom of messages
+    const messagesContainer = document.querySelector('.card-body.d-flex.flex-column');
+    if(messagesContainer){
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+</script>
+@endpush
+@endsection

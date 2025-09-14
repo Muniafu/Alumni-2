@@ -1,54 +1,68 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('New Conversation') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <form method="POST" action="{{ route('conversations.store') }}">
-                        @csrf
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-plus me-2"></i> New Conversation
+    </h2>
+</div>
+@endsection
 
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="recipients">
-                                Recipients
-                            </label>
-                            <select name="recipients[]" id="recipients" multiple
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8">
 
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="subject">
-                                Subject (optional)
-                            </label>
-                            <input type="text" name="subject" id="subject"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        </div>
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form method="POST" action="{{ route('conversations.store') }}">
+                    @csrf
 
-                        <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2" for="message">
-                                Message
-                            </label>
-                            <textarea name="message" id="message" rows="4" required
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-                        </div>
+                    <!-- Recipients -->
+                    <div class="mb-3">
+                        <label for="recipients" class="form-label fw-semibold">Recipients</label>
+                        <select name="recipients[]" id="recipients" multiple class="form-select" aria-label="Select recipients">
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Select one or more recipients for this conversation.</small>
+                    </div>
 
-                        <div class="flex items-center justify-end">
-                            <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                                Start Conversation
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    <!-- Subject -->
+                    <div class="mb-3">
+                        <label for="subject" class="form-label fw-semibold">Subject (optional)</label>
+                        <input type="text" name="subject" id="subject" class="form-control" placeholder="Enter a subject for your conversation">
+                    </div>
+
+                    <!-- Message -->
+                    <div class="mb-3">
+                        <label for="message" class="form-label fw-semibold">Message</label>
+                        <textarea name="message" id="message" rows="4" class="form-control" placeholder="Type your message here..." required></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Start Conversation
+                        </button>
+                    </div>
+
+                </form>
             </div>
         </div>
+
     </div>
-</x-app-layout>
+</div>
+
+@push('scripts')
+<script>
+    // Initialize Select2 for multi-select recipients (optional enhancement)
+    $(document).ready(function() {
+        $('#recipients').select2({
+            placeholder: "Select recipients",
+            width: '100%'
+        });
+    });
+</script>
+@endpush
+@endsection

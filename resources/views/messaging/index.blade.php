@@ -1,48 +1,69 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('My Conversations') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <a href="{{ route('conversations.create') }}" class="btn btn-primary mb-4">
-                        Start New Conversation
-                    </a>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-comments me-2"></i> My Conversations
+    </h2>
+    <a href="{{ route('conversations.create') }}" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-1"></i> New Conversation
+    </a>
+</div>
+@endsection
 
-                    <div class="space-y-4">
-                        @forelse($conversations as $conversation)
-                            <div class="border rounded-lg p-4 hover:bg-gray-50">
-                                <a href="{{ route('conversations.show', $conversation) }}" class="block">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            @foreach($conversation->otherUsers as $user)
-                                                <span class="font-semibold">{{ $user->name }}</span>
-                                                @if(!$loop->last), @endif
-                                            @endforeach
-                                        </div>
-                                        <span class="text-sm text-gray-500">
-                                            {{ $conversation->latestMessage->created_at->diffForHumans() }}
-                                        </span>
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+                @if($conversations->count())
+                    <div class="list-group">
+                        @foreach($conversations as $conversation)
+                            <a href="{{ route('conversations.show', $conversation) }}"
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-start mb-2 shadow-sm rounded hover-shadow">
+
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-semibold">
+                                        @foreach($conversation->otherUsers as $user)
+                                            {{ $user->name }}@if(!$loop->last), @endif
+                                        @endforeach
                                     </div>
-                                    <p class="text-gray-600 mt-1 truncate">
-                                        {{ $conversation->latestMessage->body }}
+                                    <p class="mb-1 text-truncate text-muted">
+                                        {{ $conversation->latestMessage->body ?? 'No messages yet.' }}
                                     </p>
-                                </a>
-                            </div>
-                        @empty
-                            <p class="text-gray-500">No conversations yet.</p>
-                        @endforelse
-                    </div>
+                                </div>
 
-                    <div class="mt-4">
-                        {{ $conversations->links() }}
+                                @if($conversation->latestMessage)
+                                    <small class="text-muted">
+                                        {{ $conversation->latestMessage->created_at->diffForHumans() }}
+                                    </small>
+                                @endif
+                            </a>
+                        @endforeach
                     </div>
+                @else
+                    <p class="text-muted text-center py-4">You have no conversations yet.</p>
+                @endif
+
+                <div class="mt-3">
+                    {{ $conversations->links('pagination::bootstrap-5') }}
                 </div>
+
             </div>
         </div>
+
     </div>
-</x-app-layout>
+</div>
+
+@push('scripts')
+<script>
+    // Optional: Add hover effect for list items
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.addEventListener('mouseenter', () => item.classList.add('shadow-lg'));
+        item.addEventListener('mouseleave', () => item.classList.remove('shadow-lg'));
+    });
+</script>
+@endpush
+@endsection
