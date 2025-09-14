@@ -48,17 +48,17 @@
         @include('layouts.navigation')
 
         <!-- Page Heading -->
-        @if (isset($header))
+        @if (trim($__env->yieldContent('header')))
             <header class="bg-white border-bottom shadow-sm">
                 <div class="container py-3">
-                    {{ $header }}
+                    @yield('header')
                 </div>
             </header>
         @endif
 
         <!-- Page Content -->
         <main class="container my-4">
-            {{ $slot }}
+            @yield('content')
         </main>
     </div>
 
