@@ -81,9 +81,11 @@
 
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown"
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{ Auth::user()->name }}
                         </a>
+
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
                             @if(auth()->user()->hasRole('admin'))
                                 <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Settings</a></li>
@@ -92,7 +94,9 @@
                             @elseif(auth()->user()->hasRole('student'))
                                 <li><a class="dropdown-item" href="{{ route('student.profile') }}">My Profile</a></li>
                             @endif
+
                             <li><hr class="dropdown-divider"></li>
+
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -101,6 +105,7 @@
                             </li>
                         </ul>
                     </li>
+
                 @else
                     <!-- Guest Links -->
                     <li class="nav-item">
