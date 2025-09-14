@@ -1,142 +1,122 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ $title }}
-            </h2>
+@extends('layouts.app')
+
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">{{ $title }}</h2>
+    @can('create jobs')
+    <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-1"></i> Post New Opportunity
+    </a>
+    @endcan
+</div>
+@endsection
+
+@section('content')
+<div class="row py-4">
+    <div class="col-12">
+
+        <!-- Filter Tabs -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link {{ !request()->has('type') ? 'active text-primary' : 'text-muted' }}" href="{{ route('jobs.index') }}">All</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->query('type') === 'job' ? 'active text-primary' : 'text-muted' }}" href="{{ route('jobs.index', ['type' => 'job']) }}">Jobs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->query('type') === 'internship' ? 'active text-primary' : 'text-muted' }}" href="{{ route('jobs.index', ['type' => 'internship']) }}">Internships</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->query('type') === 'mentorship' ? 'active text-primary' : 'text-muted' }}" href="{{ route('jobs.index', ['type' => 'mentorship']) }}">Mentorships</a>
+            </li>
+        </ul>
+
+        <!-- Job Listings -->
+        @forelse ($jobs as $job)
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between flex-wrap">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <a href="{{ route('jobs.show', $job) }}" class="text-decoration-none text-dark fw-bold">
+                                {{ $job->title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-2">{{ $job->company }} • {{ $job->location }}</p>
+
+                        <!-- Badges -->
+                        <div class="mb-2 d-flex flex-wrap gap-1">
+                            <span class="badge bg-info text-dark">{{ ucfirst($job->type) }}</span>
+                            @if($job->is_remote)
+                            <span class="badge bg-success">Remote</span>
+                            @endif
+                            @if($job->employment_type)
+                            <span class="badge bg-primary">{{ $job->employment_type }}</span>
+                            @endif
+                            @if($job->salary_range)
+                            <span class="badge bg-purple text-white">{{ $job->salary_range }}</span>
+                            @endif
+                            @if($job->isExpired)
+                            <span class="badge bg-danger">Expired</span>
+                            @elseif(!$job->is_active)
+                            <span class="badge bg-secondary">Inactive</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <small class="text-muted d-block">Posted {{ $job->created_at->diffForHumans() }}</small>
+                        @if($job->application_deadline)
+                        <small class="{{ $job->isExpired ? 'text-danger' : 'text-muted' }}">
+                            Deadline: {{ $job->application_deadline->format('M j, Y') }}
+                        </small>
+                        @endif
+                    </div>
+                </div>
+
+                <p class="card-text mt-3 text-truncate-2">{{ Str::limit($job->description, 200) }}</p>
+
+                <!-- Skills -->
+                @if($job->skills_required)
+                <div class="mt-2 d-flex flex-wrap gap-1">
+                    @foreach(array_slice($job->skills_required, 0, 3) as $skill)
+                    <span class="badge bg-light text-dark">{{ $skill }}</span>
+                    @endforeach
+                    @if(count($job->skills_required) > 3)
+                    <span class="badge bg-light text-dark">+{{ count($job->skills_required) - 3 }} more</span>
+                    @endif
+                </div>
+                @endif
+
+                <div class="mt-3 text-end">
+                    <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-primary btn-sm">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="text-center py-5">
+            <i class="fa-solid fa-briefcase fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted mb-2">No opportunities found</h5>
+            <p class="text-muted">
+                There are currently no {{ request()->query('type') ?? 'job' }} postings available.
+            </p>
             @can('create jobs')
-            <a href="{{ route('jobs.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+            <a href="{{ route('jobs.create') }}" class="btn btn-primary mt-3">
                 Post New Opportunity
             </a>
             @endcan
         </div>
-    </x-slot>
+        @endforelse
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <!-- Filter Tabs -->
-                    <div class="flex border-b border-gray-200 mb-6">
-                        <a href="{{ route('jobs.index') }}" class="px-4 py-2 {{ !request()->has('type') ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
-                            All
-                        </a>
-                        <a href="{{ route('jobs.index', ['type' => 'job']) }}" class="px-4 py-2 {{ request()->query('type') === 'job' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
-                            Jobs
-                        </a>
-                        <a href="{{ route('jobs.index', ['type' => 'internship']) }}" class="px-4 py-2 {{ request()->query('type') === 'internship' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
-                            Internships
-                        </a>
-                        <a href="{{ route('jobs.index', ['type' => 'mentorship']) }}" class="px-4 py-2 {{ request()->query('type') === 'mentorship' ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-700' }}">
-                            Mentorships
-                        </a>
-                    </div>
-
-                    <!-- Job Listings -->
-                    <div class="space-y-6">
-                        @forelse ($jobs as $job)
-                            <div class="p-6 bg-white border border-gray-200 rounded-lg shadow hover:shadow-md transition-shadow">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900">
-                                            <a href="{{ route('jobs.show', $job) }}" class="hover:text-indigo-600">{{ $job->title }}</a>
-                                        </h3>
-                                        <p class="text-sm text-gray-600 mt-1">{{ $job->company }} • {{ $job->location }}</p>
-
-                                        <div class="mt-2 flex flex-wrap gap-2">
-                                            <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
-                                                {{ ucfirst($job->type) }}
-                                            </span>
-                                            @if($job->is_remote)
-                                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                                    Remote
-                                                </span>
-                                            @endif
-                                            @if($job->employment_type)
-                                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                                                    {{ $job->employment_type }}
-                                                </span>
-                                            @endif
-                                            @if($job->salary_range)
-                                                <span class="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
-                                                    {{ $job->salary_range }}
-                                                </span>
-                                            @endif
-                                            @if($job->isExpired)
-                                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                                    Expired
-                                                </span>
-                                            @elseif(!$job->is_active)
-                                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
-                                                    Inactive
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-sm text-gray-500">
-                                            Posted {{ $job->created_at->diffForHumans() }}
-                                        </p>
-                                        @if($job->application_deadline)
-                                            <p class="text-sm {{ $job->isExpired ? 'text-red-600' : 'text-gray-600' }}">
-                                                Deadline: {{ $job->application_deadline->format('M j, Y') }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <p class="text-gray-700 line-clamp-2">{{ Str::limit($job->description, 200) }}</p>
-                                </div>
-
-                                <div class="mt-4 flex justify-between items-center">
-                                    <div>
-                                        @if($job->skills_required)
-                                            <div class="flex flex-wrap gap-1">
-                                                @foreach(array_slice($job->skills_required, 0, 3) as $skill)
-                                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
-                                                        {{ $skill }}
-                                                    </span>
-                                                @endforeach
-                                                @if(count($job->skills_required) > 3)
-                                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">
-                                                        +{{ count($job->skills_required) - 3 }} more
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('jobs.show', $job) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                                        View Details →
-                                    </a>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center py-12">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">No opportunities found</h3>
-                                <p class="mt-1 text-sm text-gray-500">There are currently no {{ request()->query('type') ?? 'job' }} postings available.</p>
-                                @can('create jobs')
-                                <div class="mt-6">
-                                    <a href="{{ route('jobs.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                        Post New Opportunity
-                                    </a>
-                                </div>
-                                @endcan
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <!-- Pagination -->
-                    @if($jobs->hasPages())
-                    <div class="mt-6">
-                        {{ $jobs->withQueryString()->links() }}
-                    </div>
-                    @endif
-                </div>
-            </div>
+        <!-- Pagination -->
+        @if($jobs->hasPages())
+        <div class="mt-4">
+            {{ $jobs->withQueryString()->links('pagination::bootstrap-5') }}
         </div>
+        @endif
+
     </div>
-</x-app-layout>
+</div>
+@endsection

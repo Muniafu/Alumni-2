@@ -1,139 +1,147 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Job Posting') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <form method="POST" action="{{ route('jobs.update', $job) }}">
-                        @csrf
-                        @method('PUT')
+@section('header')
+<div class="d-flex align-items-center justify-content-between">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-pen-to-square me-2"></i> Edit Job Posting
+    </h2>
+</div>
+@endsection
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Job Title -->
-                            <div class="md:col-span-2">
-                                <x-input-label for="title" :value="__('Job Title *')" />
-                                <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title', $job->title)" required autofocus />
-                                <x-input-error :messages="$errors->get('title')" class="mt-2" />
-                            </div>
+@section('content')
+<div class="row py-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
 
-                            <!-- Job Type -->
-                            <div>
-                                <x-input-label for="type" :value="__('Job Type *')" />
-                                <select id="type" name="type" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
-                                    <option value="job" {{ $job->type === 'job' ? 'selected' : '' }}>Job</option>
-                                    <option value="internship" {{ $job->type === 'internship' ? 'selected' : '' }}>Internship</option>
-                                    <option value="mentorship" {{ $job->type === 'mentorship' ? 'selected' : '' }}>Mentorship</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('type')" class="mt-2" />
-                            </div>
-
-                            <!-- Company -->
-                            <div>
-                                <x-input-label for="company" :value="__('Company *')" />
-                                <x-text-input id="company" class="block mt-1 w-full" type="text" name="company" :value="old('company', $job->company)" required />
-                                <x-input-error :messages="$errors->get('company')" class="mt-2" />
-                            </div>
-
-                            <!-- Location -->
-                            <div>
-                                <x-input-label for="location" :value="__('Location *')" />
-                                <x-text-input id="location" class="block mt-1 w-full" type="text" name="location" :value="old('location', $job->location)" required />
-                                <x-input-error :messages="$errors->get('location')" class="mt-2" />
-                            </div>
-
-                            <!-- Remote Work -->
-                            <div>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="is_remote" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ $job->is_remote ? 'checked' : '' }}>
-                                    <span class="ml-2 text-sm text-gray-600">This is a remote position</span>
-                                </label>
-                            </div>
-
-                            <!-- Employment Type -->
-                            <div>
-                                <x-input-label for="employment_type" :value="__('Employment Type')" />
-                                <x-text-input id="employment_type" class="block mt-1 w-full" type="text" name="employment_type" :value="old('employment_type', $job->employment_type)" placeholder="Full-time, Part-time, Contract" />
-                                <x-input-error :messages="$errors->get('employment_type')" class="mt-2" />
-                            </div>
-
-                            <!-- Salary Range -->
-                            <div>
-                                <x-input-label for="salary_range" :value="__('Salary Range')" />
-                                <x-text-input id="salary_range" class="block mt-1 w-full" type="text" name="salary_range" :value="old('salary_range', $job->salary_range)" placeholder="e.g. $50,000 - $70,000" />
-                                <x-input-error :messages="$errors->get('salary_range')" class="mt-2" />
-                            </div>
-
-                            <!-- Application Deadline -->
-                            <div>
-                                <x-input-label for="application_deadline" :value="__('Application Deadline')" />
-                                <x-text-input id="application_deadline" class="block mt-1 w-full" type="date" name="application_deadline" :value="old('application_deadline', $job->application_deadline?->format('Y-m-d'))" />
-                                <x-input-error :messages="$errors->get('application_deadline')" class="mt-2" />
-                            </div>
-
-                            <!-- Contact Email -->
-                            <div>
-                                <x-input-label for="contact_email" :value="__('Contact Email *')" />
-                                <x-text-input id="contact_email" class="block mt-1 w-full" type="email" name="contact_email" :value="old('contact_email', $job->contact_email)" required />
-                                <x-input-error :messages="$errors->get('contact_email')" class="mt-2" />
-                            </div>
-
-                            <!-- Contact Phone -->
-                            <div>
-                                <x-input-label for="contact_phone" :value="__('Contact Phone')" />
-                                <x-text-input id="contact_phone" class="block mt-1 w-full" type="tel" name="contact_phone" :value="old('contact_phone', $job->contact_phone)" />
-                                <x-input-error :messages="$errors->get('contact_phone')" class="mt-2" />
-                            </div>
-
-                            <!-- Website -->
-                            <div>
-                                <x-input-label for="website" :value="__('Website')" />
-                                <x-text-input id="website" class="block mt-1 w-full" type="url" name="website" :value="old('website', $job->website)" placeholder="https://" />
-                                <x-input-error :messages="$errors->get('website')" class="mt-2" />
-                            </div>
-
-                            <!-- Required Skills -->
-                            <div>
-                                <x-input-label for="skills_required" :value="__('Required Skills (comma separated)')" />
-                                <x-text-input id="skills_required" class="block mt-1 w-full" type="text" name="skills_required" :value="old('skills_required', $job->skills_required ? implode(', ', $job->skills_required) : '')" placeholder="PHP, Laravel, MySQL" />
-                                <x-input-error :messages="$errors->get('skills_required')" class="mt-2" />
-                            </div>
-
-                            <!-- Preferred Skills -->
-                            <div>
-                                <x-input-label for="skills_preferred" :value="__('Preferred Skills (comma separated)')" />
-                                <x-text-input id="skills_preferred" class="block mt-1 w-full" type="text" name="skills_preferred" :value="old('skills_preferred', $job->skills_preferred ? implode(', ', $job->skills_preferred) : '')" placeholder="Vue.js, AWS, Docker" />
-                                <x-input-error :messages="$errors->get('skills_preferred')" class="mt-2" />
-                            </div>
-
-                            <!-- Job Description -->
-                            <div class="md:col-span-2">
-                                <x-input-label for="description" :value="__('Job Description *')" />
-                                <textarea id="description" name="description" rows="6" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>{{ old('description', $job->description) }}</textarea>
-                                <x-input-error :messages="$errors->get('description')" class="mt-2" />
-                            </div>
-
-                            <!-- Active Status -->
-                            <div>
-                                <label class="flex items-center">
-                                    <input type="checkbox" name="is_active" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" {{ $job->is_active ? 'checked' : '' }}>
-                                    <span class="ml-2 text-sm text-gray-600">Active Listing</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end mt-6">
-                            <x-primary-button>
-                                {{ __('Update Job') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
+                <!-- Error Display -->
+                @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
+                @endif
+
+                <form method="POST" action="{{ route('jobs.update', $job) }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="row g-3">
+                        <!-- Job Title -->
+                        <div class="col-12">
+                            <label for="title" class="form-label fw-medium">Job Title *</label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ old('title', $job->title) }}" required autofocus>
+                        </div>
+
+                        <!-- Job Type -->
+                        <div class="col-md-6">
+                            <label for="type" class="form-label fw-medium">Job Type *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="job" {{ $job->type === 'job' ? 'selected' : '' }}>Job</option>
+                                <option value="internship" {{ $job->type === 'internship' ? 'selected' : '' }}>Internship</option>
+                                <option value="mentorship" {{ $job->type === 'mentorship' ? 'selected' : '' }}>Mentorship</option>
+                            </select>
+                        </div>
+
+                        <!-- Company -->
+                        <div class="col-md-6">
+                            <label for="company" class="form-label fw-medium">Company *</label>
+                            <input type="text" class="form-control" id="company" name="company" value="{{ old('company', $job->company) }}" required>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label for="location" class="form-label fw-medium">Location *</label>
+                            <input type="text" class="form-control" id="location" name="location" value="{{ old('location', $job->location) }}" required>
+                        </div>
+
+                        <!-- Remote Work -->
+                        <div class="col-md-6 d-flex align-items-center mt-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_remote" name="is_remote" {{ $job->is_remote ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_remote">
+                                    Remote position
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Employment Type -->
+                        <div class="col-md-6">
+                            <label for="employment_type" class="form-label fw-medium">Employment Type</label>
+                            <input type="text" class="form-control" id="employment_type" name="employment_type" value="{{ old('employment_type', $job->employment_type) }}" placeholder="Full-time, Part-time, Contract">
+                        </div>
+
+                        <!-- Salary Range -->
+                        <div class="col-md-6">
+                            <label for="salary_range" class="form-label fw-medium">Salary Range</label>
+                            <input type="text" class="form-control" id="salary_range" name="salary_range" value="{{ old('salary_range', $job->salary_range) }}" placeholder="e.g. $50,000 - $70,000">
+                        </div>
+
+                        <!-- Application Deadline -->
+                        <div class="col-md-6">
+                            <label for="application_deadline" class="form-label fw-medium">Application Deadline</label>
+                            <input type="date" class="form-control" id="application_deadline" name="application_deadline" value="{{ old('application_deadline', $job->application_deadline?->format('Y-m-d')) }}">
+                        </div>
+
+                        <!-- Contact Email -->
+                        <div class="col-md-6">
+                            <label for="contact_email" class="form-label fw-medium">Contact Email *</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" value="{{ old('contact_email', $job->contact_email) }}" required>
+                        </div>
+
+                        <!-- Contact Phone -->
+                        <div class="col-md-6">
+                            <label for="contact_phone" class="form-label fw-medium">Contact Phone</label>
+                            <input type="tel" class="form-control" id="contact_phone" name="contact_phone" value="{{ old('contact_phone', $job->contact_phone) }}">
+                        </div>
+
+                        <!-- Website -->
+                        <div class="col-md-6">
+                            <label for="website" class="form-label fw-medium">Website</label>
+                            <input type="url" class="form-control" id="website" name="website" value="{{ old('website', $job->website) }}" placeholder="https://">
+                        </div>
+
+                        <!-- Required Skills -->
+                        <div class="col-md-6">
+                            <label for="skills_required" class="form-label fw-medium">Required Skills</label>
+                            <input type="text" class="form-control" id="skills_required" name="skills_required" value="{{ old('skills_required', $job->skills_required ? implode(', ', $job->skills_required) : '') }}" placeholder="PHP, Laravel, MySQL">
+                        </div>
+
+                        <!-- Preferred Skills -->
+                        <div class="col-md-6">
+                            <label for="skills_preferred" class="form-label fw-medium">Preferred Skills</label>
+                            <input type="text" class="form-control" id="skills_preferred" name="skills_preferred" value="{{ old('skills_preferred', $job->skills_preferred ? implode(', ', $job->skills_preferred) : '') }}" placeholder="Vue.js, AWS, Docker">
+                        </div>
+
+                        <!-- Job Description -->
+                        <div class="col-12">
+                            <label for="description" class="form-label fw-medium">Job Description *</label>
+                            <textarea class="form-control" id="description" name="description" rows="6" required>{{ old('description', $job->description) }}</textarea>
+                        </div>
+
+                        <!-- Active Status -->
+                        <div class="col-md-6 d-flex align-items-center mt-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {{ $job->is_active ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_active">
+                                    Active Listing
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Update Job
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

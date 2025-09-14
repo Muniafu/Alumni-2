@@ -1,59 +1,64 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Your Job Postings') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    @if($jobs->isEmpty())
-                        <div class="text-center py-8">
-                            <p class="text-gray-600">You haven't posted any jobs yet.</p>
-                            <a href="{{ route('jobs.create') }}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                Post a New Job
-                            </a>
-                        </div>
-                    @else
-                        <div class="space-y-6">
-                            @foreach($jobs as $job)
-                                <div class="p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h3 class="text-lg font-semibold">
-                                                <a href="{{ route('jobs.show', $job) }}" class="hover:text-blue-600">
-                                                    {{ $job->title }}
-                                                </a>
-                                            </h3>
-                                            <p class="text-gray-600 mt-1">{{ $job->company }} • {{ $job->location }}</p>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">{{ __('Your Job Postings') }}</h2>
+    <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-1"></i> Post a New Job
+    </a>
+</div>
+@endsection
 
-                                            <div class="mt-2 flex items-center text-sm text-gray-600">
-                                                <span class="mr-2">{{ $job->employment_type }}</span>
-                                                •
-                                                <span class="mx-2">{{ $job->applications_count }} applications</span>
-                                                •
-                                                <span class="ml-2">{{ $job->created_at->diffForHumans() }}</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <span class="px-3 py-1 text-xs font-medium rounded-full
-                                                {{ $job->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                                {{ $job->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+@section('content')
+<div class="row py-4">
+    <div class="col-12">
+        @if($jobs->isEmpty())
+        <div class="text-center py-5">
+            <i class="fa-solid fa-briefcase fa-3x text-muted mb-3"></i>
+            <p class="text-muted mb-3">You haven't posted any jobs yet.</p>
+            <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+                Post a New Job
+            </a>
+        </div>
+        @else
+        <div class="row g-4">
+            @foreach($jobs as $job)
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex justify-content-between flex-wrap align-items-start">
+                        <div class="me-3 flex-grow-1">
+                            <h5 class="card-title mb-1">
+                                <a href="{{ route('jobs.show', $job) }}" class="text-decoration-none text-dark fw-bold">
+                                    {{ $job->title }}
+                                </a>
+                            </h5>
+                            <p class="text-muted mb-2">{{ $job->company }} • {{ $job->location }}</p>
+
+                            <div class="d-flex flex-wrap gap-2 text-muted small">
+                                @if($job->employment_type)
+                                <span class="badge bg-info text-dark">{{ $job->employment_type }}</span>
+                                @endif
+                                <span class="badge bg-secondary">{{ $job->applications_count }} applications</span>
+                                <span class="badge bg-light text-dark">{{ $job->created_at->diffForHumans() }}</span>
+                            </div>
                         </div>
 
-                        <div class="mt-6">
-                            {{ $jobs->links() }}
+                        <div class="text-end mt-2 mt-md-0">
+                            <span class="badge rounded-pill {{ $job->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $job->is_active ? 'Active' : 'Inactive' }}
+                            </span>
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
+            @endforeach
         </div>
+
+        <!-- Pagination -->
+        <div class="mt-4">
+            {{ $jobs->links('pagination::bootstrap-5') }}
+        </div>
+        @endif
     </div>
-</x-app-layout>
+</div>
+@endsection
