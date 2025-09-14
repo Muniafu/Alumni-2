@@ -1,111 +1,143 @@
-<x-layout>
-    <x-slot name="title">Mentorship Requests</x-slot>
+@extends('layouts.app')
 
-    <div class="container py-4">
-        <div class="row">
-            <div class="col-md-8 mx-auto">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Mentorship Requests</h4>
-                    </div>
+@section('header')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-envelope me-2"></i> Mentorship Requests
+    </h2>
+</div>
+@endsection
 
-                    <div class="card-body">
-                        <ul class="nav nav-tabs" id="requestsTab" role="tablist">
-                            <li class="nav-item">
-                                <a class="nav-link active" id="received-tab" data-toggle="tab" href="#received" role="tab">
-                                    Received Requests
-                                    @if($receivedRequests->count() > 0)
-                                        <span class="badge badge-primary">{{ $receivedRequests->count() }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" id="sent-tab" data-toggle="tab" href="#sent" role="tab">
-                                    Sent Requests
-                                    @if($sentRequests->count() > 0)
-                                        <span class="badge badge-info">{{ $sentRequests->count() }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                        </ul>
+@section('content')
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">Manage Requests</h4>
+                </div>
 
-                        <div class="tab-content py-3" id="requestsTabContent">
-                            <div class="tab-pane fade show active" id="received" role="tabpanel">
-                                @if($receivedRequests->isEmpty())
-                                    <div class="alert alert-info">You have no received mentorship requests.</div>
-                                @else
-                                    @foreach($receivedRequests as $request)
-                                        <div class="card mb-3">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Request from {{ $request->mentee->name }}</h5>
-                                                    <span class="badge badge-{{ $request->status === 'pending' ? 'warning' : ($request->status === 'accepted' ? 'success' : 'danger') }}">
-                                                        {{ ucfirst($request->status) }}
-                                                    </span>
-                                                </div>
-
-                                                <p class="text-muted">Goal: {{ $request->goal }}</p>
-                                                <p>{{ $request->message }}</p>
-
-                                                @if($request->status === 'pending')
-                                                    <form action="{{ route('mentorship.respond-request', $request) }}" method="POST">
-                                                        @csrf
-                                                        <div class="form-group">
-                                                            <label for="response-message-{{ $request->id }}">Response Message (Optional)</label>
-                                                            <textarea class="form-control" id="response-message-{{ $request->id }}"
-                                                                      name="message" rows="2"></textarea>
-                                                        </div>
-                                                        <button type="submit" name="response" value="accept"
-                                                                class="btn btn-success btn-sm">Accept</button>
-                                                        <button type="submit" name="response" value="reject"
-                                                                class="btn btn-danger btn-sm">Reject</button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                            <div class="card-footer text-muted">
-                                                Requested {{ $request->created_at->diffForHumans() }}
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                    {{ $receivedRequests->links() }}
+                <div class="card-body">
+                    <ul class="nav nav-tabs mb-3" id="requestsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab">
+                                Received
+                                @if($receivedRequests->count() > 0)
+                                    <span class="badge bg-warning text-dark ms-1">{{ $receivedRequests->count() }}</span>
                                 @endif
-                            </div>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="sent-tab" data-bs-toggle="tab" data-bs-target="#sent" type="button" role="tab">
+                                Sent
+                                @if($sentRequests->count() > 0)
+                                    <span class="badge bg-info text-light ms-1">{{ $sentRequests->count() }}</span>
+                                @endif
+                            </button>
+                        </li>
+                    </ul>
 
-                            <div class="tab-pane fade" id="sent" role="tabpanel">
-                                @if($sentRequests->isEmpty())
-                                    <div class="alert alert-info">You have no sent mentorship requests.</div>
-                                @else
-                                    @foreach($sentRequests as $request)
-                                        <div class="card mb-3">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between">
-                                                    <h5>Request to {{ $request->mentor->name }}</h5>
-                                                    <span class="badge badge-{{ $request->status === 'pending' ? 'warning' : ($request->status === 'accepted' ? 'success' : 'danger') }}">
-                                                        {{ ucfirst($request->status) }}
-                                                    </span>
-                                                </div>
+                    <div class="tab-content" id="requestsTabContent">
+                        <!-- Received Requests -->
+                        <div class="tab-pane fade show active" id="received" role="tabpanel">
+                            @if($receivedRequests->isEmpty())
+                                <div class="alert alert-info">
+                                    <i class="fa-solid fa-info-circle me-2"></i> You have no received mentorship requests.
+                                </div>
+                            @else
+                                @foreach($receivedRequests as $request)
+                                    <div class="card mb-3 shadow-sm border-0">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="mb-1">Request from {{ $request->mentee->name }}</h5>
+                                                <span class="badge
+                                                    @if($request->status === 'pending') bg-warning text-dark
+                                                    @elseif($request->status === 'accepted') bg-success text-light
+                                                    @else bg-danger text-light @endif">
+                                                    {{ ucfirst($request->status) }}
+                                                </span>
+                                            </div>
+                                            <p class="text-muted mb-1"><strong>Goal:</strong> {{ $request->goal }}</p>
+                                            <p class="mb-2">{{ $request->message }}</p>
 
-                                                <p class="text-muted">Goal: {{ $request->goal }}</p>
-                                                <p>{{ $request->message }}</p>
-
-                                                @if($request->status === 'rejected' && $request->message)
-                                                    <div class="alert alert-light">
-                                                        <strong>Mentor's Response:</strong> {{ $request->message }}
+                                            @if($request->status === 'pending')
+                                                <form action="{{ route('mentorship.respond-request', $request) }}" method="POST">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <label for="response-message-{{ $request->id }}" class="form-label">Response Message (Optional)</label>
+                                                        <textarea class="form-control" id="response-message-{{ $request->id }}" name="message" rows="2"></textarea>
                                                     </div>
-                                                @endif
-                                            </div>
-                                            <div class="card-footer text-muted">
-                                                Sent {{ $request->created_at->diffForHumans() }}
-                                            </div>
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        <button type="submit" name="response" value="accept" class="btn btn-success btn-sm">
+                                                            Accept
+                                                        </button>
+                                                        <button type="submit" name="response" value="reject" class="btn btn-danger btn-sm">
+                                                            Reject
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            @endif
                                         </div>
-                                    @endforeach
-                                    {{ $sentRequests->links() }}
-                                @endif
-                            </div>
+                                        <div class="card-footer text-muted">
+                                            Requested {{ $request->created_at->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                                <div class="d-flex justify-content-center mt-3">
+                                    {{ $receivedRequests->links('pagination::bootstrap-5') }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Sent Requests -->
+                        <div class="tab-pane fade" id="sent" role="tabpanel">
+                            @if($sentRequests->isEmpty())
+                                <div class="alert alert-info">
+                                    <i class="fa-solid fa-info-circle me-2"></i> You have no sent mentorship requests.
+                                </div>
+                            @else
+                                @foreach($sentRequests as $request)
+                                    <div class="card mb-3 shadow-sm border-0">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h5 class="mb-1">Request to {{ $request->mentor->name }}</h5>
+                                                <span class="badge
+                                                    @if($request->status === 'pending') bg-warning text-dark
+                                                    @elseif($request->status === 'accepted') bg-success text-light
+                                                    @else bg-danger text-light @endif">
+                                                    {{ ucfirst($request->status) }}
+                                                </span>
+                                            </div>
+                                            <p class="text-muted mb-1"><strong>Goal:</strong> {{ $request->goal }}</p>
+                                            <p class="mb-2">{{ $request->message }}</p>
+
+                                            @if($request->status === 'rejected' && $request->message)
+                                                <div class="alert alert-light">
+                                                    <strong>Mentor's Response:</strong> {{ $request->message }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="card-footer text-muted">
+                                            Sent {{ $request->created_at->diffForHumans() }}
+                                        </div>
+                                    </div>
+                                @endforeach
+                                <div class="d-flex justify-content-center mt-3">
+                                    {{ $sentRequests->links('pagination::bootstrap-5') }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</x-layout>
+
+    <style>
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+            transition: box-shadow 0.3s ease;
+        }
+    </style>
+</div>
+@endsection

@@ -1,72 +1,77 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('My Mentorships') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold">My Mentorships</h2>
-                        <a href="{{ route('mentorship.find') }}" class="btn btn-primary">
-                            Find a Mentor
-                        </a>
-                    </div>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-users me-2"></i> My Mentorships
+    </h2>
+    <a href="{{ route('mentorship.find') }}" class="btn btn-primary">
+        <i class="fa-solid fa-magnifying-glass me-1"></i> Find a Mentor
+    </a>
+</div>
+@endsection
 
-                    <div class="space-y-6">
-                        @forelse($mentorships as $mentorship)
-                            <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                                <div class="p-6">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h3 class="font-bold text-lg mb-1">
-                                                @if($mentorship->mentor_id === auth()->id())
-                                                    Mentoring {{ $mentorship->mentee->name }}
-                                                @else
-                                                    Mentored by {{ $mentorship->mentor->name }}
-                                                @endif
-                                            </h3>
-                                            <p class="text-gray-600 mb-2">
-                                                Started {{ $mentorship->start_date->format('M j, Y') }}
-                                                @if($mentorship->end_date)
-                                                    • Ended {{ $mentorship->end_date->format('M j, Y') }}
-                                                @endif
-                                            </p>
-                                            <div class="flex flex-wrap gap-2 mb-3">
-                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded capitalize">
-                                                    {{ $mentorship->status }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <a href="{{ route('mentorship.show', $mentorship) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                View Details
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <p class="text-gray-700 mb-4 line-clamp-2">{{ $mentorship->goal }}</p>
-                                </div>
+@section('content')
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            @forelse($mentorships as $mentorship)
+                <div class="card shadow-sm mb-4 border-0 hover-shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    @if($mentorship->mentor_id === auth()->id())
+                                        Mentoring {{ $mentorship->mentee->name }}
+                                    @else
+                                        Mentored by {{ $mentorship->mentor->name }}
+                                    @endif
+                                </h5>
+                                <p class="text-secondary mb-2">
+                                    Started {{ $mentorship->start_date->format('M j, Y') }}
+                                    @if($mentorship->end_date)
+                                        • Ended {{ $mentorship->end_date->format('M j, Y') }}
+                                    @endif
+                                </p>
+                                <span class="badge
+                                    @if($mentorship->status === 'active') bg-success
+                                    @elseif($mentorship->status === 'completed') bg-primary
+                                    @else bg-info text-dark @endif
+                                    text-capitalize mb-2">
+                                    {{ $mentorship->status }}
+                                </span>
+                                <p class="text-secondary mb-0">{{ Str::limit($mentorship->goal, 120) }}</p>
                             </div>
-                        @empty
-                            <div class="text-center py-8">
-                                <p class="text-gray-500 mb-4">You don't have any active mentorships.</p>
-                                <a href="{{ route('mentorship.find') }}" class="btn btn-primary">
-                                    Find a Mentor
+                            <div class="text-end">
+                                <a href="{{ route('mentorship.show', $mentorship) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fa-solid fa-arrow-right me-1"></i> View Details
                                 </a>
                             </div>
-                        @endforelse
-                    </div>
-
-                    @if($mentorships->isNotEmpty())
-                        <div class="mt-4">
-                            {{ $mentorships->links() }}
                         </div>
-                    @endif
+                    </div>
                 </div>
-            </div>
+            @empty
+                <div class="text-center py-5">
+                    <p class="text-secondary mb-3">You don't have any active mentorships.</p>
+                    <a href="{{ route('mentorship.find') }}" class="btn btn-primary">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Find a Mentor
+                    </a>
+                </div>
+            @endforelse
+
+            @if($mentorships->isNotEmpty())
+                <div class="d-flex justify-content-center mt-4">
+                    {{ $mentorships->links('pagination::bootstrap-5') }}
+                </div>
+            @endif
         </div>
     </div>
-</x-app-layout>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+        transition: box-shadow 0.3s ease;
+    }
+</style>
+@endsection
