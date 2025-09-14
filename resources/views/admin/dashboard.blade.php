@@ -104,7 +104,7 @@
                     <div class="bg-white p-6 rounded-lg shadow border border-gray-200 mb-8">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Permissions Management</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <a href="{{ route('admin.permissions') }}" class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 transition-colors">
+                            <a href="{{ route('admin.permissions.index') }}" class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 transition-colors">
                                 <h4 class="font-medium text-gray-900">Permissions</h4>
                                 <p class="text-sm text-gray-500 mt-1">Manage all permissions</p>
                             </a>

@@ -1,47 +1,102 @@
-<x-guest-layout>
-    <div class="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-6">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Confirm Password - Alumni System</title>
 
-        <!-- Branding -->
-        <div class="text-center mb-8">
-            <img src="/images/logo.png" alt="App Logo" class="mx-auto h-16 w-16 rounded-full shadow-md mb-4" />
-            <h1 class="text-2xl font-bold text-blue-700">Confirm Your Password</h1>
-            <p class="text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
-                🔒 This is a <span class="text-blue-600 font-semibold">secure area</span> of the system.
-                Please re-enter your password to continue.
-            </p>
-        </div>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <!-- Confirmation Card -->
-        <div class="w-full max-w-md bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-xl border-t-4 border-blue-600">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: linear-gradient(to bottom right, #eef2ff, #e6f0ff); /* Calm & trustworthy */
+        }
+        .card-glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border-top: 0.3rem solid #0d6efd; /* Blue conveys trust/security */
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .card-glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }
+        .btn-brand {
+            background-color: #0d6efd;
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-brand:hover {
+            background-color: #0b5ed7;
+        }
+        .header-title {
+            color: #0d6efd;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex flex-column justify-content-center align-items-center min-vh-100 px-3">
+
+    <!-- Branding -->
+    <div class="text-center mb-5">
+        <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width: 80px; height: 80px;">
+        <h1 class="h4 fw-bold header-title">Confirm Your Password</h1>
+        <p class="text-secondary mt-2" style="max-width: 400px; margin: 0 auto;">
+            🔒 This is a <span class="text-primary fw-semibold">secure area</span> of the system.
+            Please re-enter your password to continue.
+        </p>
+    </div>
+
+    <!-- Confirmation Card -->
+    <div class="card card-glass p-4 p-md-5 shadow-lg" style="max-width: 450px; width: 100%;">
+        <div class="card-body">
 
             <form method="POST" action="{{ route('password.confirm') }}">
                 @csrf
 
-                <!-- Password -->
-                <div>
-                    <x-input-label for="password" :value="__('Password')" class="text-gray-800 font-semibold" />
-                    <x-text-input id="password"
-                                  class="block mt-1 w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  type="password"
-                                  name="password"
-                                  required
-                                  autocomplete="current-password"
-                                  placeholder="Enter your password securely" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-600" />
+                <!-- Password Input -->
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <input type="password" name="password" id="password"
+                           class="form-control rounded-pill shadow-sm"
+                           required autocomplete="current-password"
+                           placeholder="Enter your password securely">
+                    <x-input-error :messages="$errors->get('password')" class="text-danger mt-1" />
                 </div>
 
                 <!-- Confirm Action -->
-                <div class="flex items-center justify-end mt-6">
-                    <x-primary-button class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none transition font-semibold">
-                        {{ __('Confirm & Continue') }}
-                    </x-primary-button>
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-brand rounded-pill px-4 py-2 shadow">
+                        Confirm & Continue
+                    </button>
                 </div>
             </form>
-        </div>
 
-        <!-- Security Footer -->
-        <footer class="mt-10 text-gray-500 text-sm text-center">
-            &copy; {{ date('Y') }} Alumni System · Your security matters.
-        </footer>
+        </div>
     </div>
-</x-guest-layout>
+
+    <!-- Security Footer -->
+    <footer class="mt-5 text-center text-secondary small">
+        &copy; {{ date('Y') }} Alumni System · Your security matters.
+    </footer>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

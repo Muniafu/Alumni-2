@@ -1,55 +1,110 @@
-<x-guest-layout>
-    <div class="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-6">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Verify Email - Alumni System</title>
 
-        <!-- Branding -->
-        <div class="text-center mb-8">
-            <img src="/images/logo.png" alt="Alumni Logo" class="mx-auto h-16 w-16 rounded-full shadow-md mb-4" />
-            <h1 class="text-2xl font-bold text-blue-700">Verify Your Email</h1>
-            <p class="text-gray-600 mt-2 max-w-md mx-auto leading-relaxed">
-                ✉️ Thanks for joining the <span class="text-blue-600 font-semibold">Alumni Network</span>!
-                To get started, please confirm your email address.
-            </p>
-        </div>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        <!-- Main Card -->
-        <div class="w-full max-w-lg bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-xl border-t-4 border-blue-600">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
 
-            <div class="mb-4 text-sm text-gray-700">
-                {{ __('Before continuing, check your inbox for the verification link. Didn’t get it? We can send another one.') }}
-            </div>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-            <!-- Success Message -->
-            @if (session('status') == 'verification-link-sent')
-                <div class="mb-4 font-medium text-sm text-green-600 bg-green-50 p-3 rounded-lg border border-green-200 shadow-sm">
-                    ✅ {{ __('A new verification link has been sent to your email address.') }}
-                </div>
-            @endif
+    <style>
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: linear-gradient(to bottom right, #eef2ff, #e6f0ff); /* Calm & Trust */
+        }
+        .card-glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border-top: 0.3rem solid #0d6efd; /* Brand accent */
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .card-glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }
+        .btn-brand {
+            background-color: #0d6efd;
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-brand:hover {
+            background-color: #0b5ed7;
+        }
+        .header-title {
+            color: #0d6efd;
+        }
+        .alert-success {
+            border-radius: 0.75rem;
+        }
+    </style>
+</head>
+<body>
 
-            <!-- Actions -->
-            <div class="mt-6 flex items-center justify-between">
+<div class="d-flex flex-column justify-content-center align-items-center min-vh-100 px-3">
 
-                <!-- Resend Button -->
-                <form method="POST" action="{{ route('verification.send') }}">
-                    @csrf
-                    <x-primary-button class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition font-semibold">
-                        {{ __('Resend Verification Email') }}
-                    </x-primary-button>
-                </form>
-
-                <!-- Logout -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit"
-                        class="underline text-sm text-gray-600 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition">
-                        {{ __('Log Out') }}
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer class="mt-10 text-gray-500 text-sm text-center">
-            &copy; {{ date('Y') }} Alumni System · Stay connected, stay verified.
-        </footer>
+    <!-- Branding -->
+    <div class="text-center mb-5">
+        <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width: 80px; height: 80px;">
+        <h1 class="h4 fw-bold header-title">Verify Your Email</h1>
+        <p class="text-muted mt-2" style="max-width: 400px; margin: 0 auto;">
+            ✉️ Thanks for joining the <span class="fw-semibold text-primary">Alumni Network</span>!
+            Please confirm your email address to get started.
+        </p>
     </div>
-</x-guest-layout>
+
+    <!-- Card -->
+    <div class="card card-glass p-4 p-md-5 shadow-lg" style="max-width: 500px; width: 100%;">
+
+        <p class="text-secondary mb-3 small">
+            {{ __('Before continuing, check your inbox for the verification link. Didn’t get it? We can send another one.') }}
+        </p>
+
+        <!-- Success Message -->
+        @if (session('status') == 'verification-link-sent')
+            <div class="alert alert-success mb-3" role="alert">
+                ✅ {{ __('A new verification link has been sent to your email address.') }}
+            </div>
+        @endif
+
+        <!-- Actions -->
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mt-4">
+
+            <!-- Resend Verification -->
+            <form method="POST" action="{{ route('verification.send') }}">
+                @csrf
+                <button type="submit" class="btn btn-brand btn-lg w-100">
+                    {{ __('Resend Verification Email') }}
+                </button>
+            </form>
+
+            <!-- Logout -->
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-lg w-100">
+                    {{ __('Log Out') }}
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 text-center text-secondary small">
+        &copy; {{ date('Y') }} Alumni System · Stay connected, stay verified.
+    </footer>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

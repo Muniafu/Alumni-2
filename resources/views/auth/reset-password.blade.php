@@ -1,69 +1,113 @@
-<x-guest-layout>
-    <div class="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-50 via-white to-green-50 px-6">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reset Password - Alumni System</title>
 
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        body {
+            font-family: 'Figtree', sans-serif;
+            background: linear-gradient(to bottom right, #eef2ff, #e6f0ff); /* Calm & professional */
+        }
+        .card-glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border-top: 0.3rem solid #0d6efd; /* Brand color accent */
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .card-glass:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }
+        .btn-brand {
+            background-color: #0d6efd;
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn-brand:hover {
+            background-color: #0b5ed7;
+        }
+        .header-title {
+            color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="d-flex flex-column justify-content-center align-items-center min-vh-100 px-3">
         <!-- Branding -->
-        <div class="text-center mb-8">
-            <img src="/images/logo.png" alt="Alumni Logo" class="mx-auto h-16 w-16 rounded-full shadow-md mb-4" />
-            <h1 class="text-2xl font-bold text-blue-700">Reset Your Password</h1>
-            <p class="text-gray-600 mt-2 max-w-md mx-auto">
-                Create a <span class="text-green-600 font-semibold">new secure password</span> to keep your account safe and accessible.
+        <div class="text-center mb-5">
+            <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width: 80px; height: 80px;">
+            <h1 class="h4 fw-bold header-title">Reset Your Password</h1>
+            <p class="text-muted mt-2" style="max-width: 400px; margin: 0 auto;">
+                Create a <span class="text-success fw-semibold">new secure password</span> to keep your account safe and accessible.
             </p>
         </div>
 
         <!-- Reset Card -->
-        <div class="w-full max-w-md bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-xl border-t-4 border-blue-600">
+        <div class="card card-glass p-4 p-md-5 shadow-lg" style="max-width: 500px; width: 100%;">
             <form method="POST" action="{{ route('password.store') }}">
                 @csrf
-
-                <!-- Password Reset Token -->
                 <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-                <!-- Email Address -->
-                <div>
-                    <x-input-label for="email" :value="__('Email')" class="text-gray-800 font-semibold" />
-                    <x-text-input id="email"
-                                  class="block mt-1 w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  type="email"
-                                  name="email"
-                                  :value="old('email', $request->email)"
-                                  required autofocus autocomplete="username" />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-600" />
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold text-secondary">Email</label>
+                    <input type="email" id="email" name="email" value="{{ old('email', $request->email) }}" required autofocus
+                        class="form-control form-control-lg @error('email') is-invalid @enderror">
+                    @error('email')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <!-- New Password -->
-                <div class="mt-4">
-                    <x-input-label for="password" :value="__('New Password')" class="text-gray-800 font-semibold" />
-                    <x-text-input id="password"
-                                  class="block mt-1 w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  type="password"
-                                  name="password"
-                                  required autocomplete="new-password" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-600" />
+                <div class="mb-3">
+                    <label for="password" class="form-label fw-semibold text-secondary">New Password</label>
+                    <input type="password" id="password" name="password" required
+                        class="form-control form-control-lg @error('password') is-invalid @enderror">
+                    @error('password')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <!-- Confirm Password -->
-                <div class="mt-4">
-                    <x-input-label for="password_confirmation" :value="__('Confirm Password')" class="text-gray-800 font-semibold" />
-                    <x-text-input id="password_confirmation"
-                                  class="block mt-1 w-full rounded-lg border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                                  type="password"
-                                  name="password_confirmation"
-                                  required autocomplete="new-password" />
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2 text-red-600" />
+                <div class="mb-4">
+                    <label for="password_confirmation" class="form-label fw-semibold text-secondary">Confirm Password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" required
+                        class="form-control form-control-lg @error('password_confirmation') is-invalid @enderror">
+                    @error('password_confirmation')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
-                <!-- Action -->
-                <div class="flex items-center justify-end mt-6">
-                    <x-primary-button class="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-md hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 focus:outline-none transition font-semibold">
-                        {{ __('Reset Password') }}
-                    </x-primary-button>
+                <!-- Action Button -->
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-brand btn-lg rounded-pill px-4 py-2 shadow">
+                        Reset Password
+                    </button>
                 </div>
             </form>
         </div>
 
         <!-- Footer -->
-        <footer class="mt-10 text-gray-500 text-sm text-center">
-            &copy; {{ date('Y') }} Alumni System. Your security is our priority.
+        <footer class="mt-5 text-center text-secondary small">
+            &copy; {{ date('Y') }} Alumni System · Your security is our priority.
         </footer>
     </div>
-</x-guest-layout>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
