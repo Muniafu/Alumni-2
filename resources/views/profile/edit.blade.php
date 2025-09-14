@@ -1,13 +1,15 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="bg-light border-bottom py-3 mb-4">
-            <div class="container">
-                <h2 class="fw-bold text-dark mb-0">{{ __('Profile') }}</h2>
-                <small class="text-muted">Manage your personal details, security, and account settings</small>
-            </div>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
+@section('header')
+    <div class="bg-light border-bottom py-3 mb-4">
+        <div class="container">
+            <h2 class="fw-bold text-dark mb-0">{{ __('Profile') }}</h2>
+            <small class="text-muted">Manage your personal details, security, and account settings</small>
+        </div>
+    </div>
+@endsection
+
+@section('content')
     <div class="container my-5">
 
         {{-- Progress / Stepper --}}
@@ -76,4 +78,4 @@
 
         </div>
     </div>
-</x-app-layout>
+@endsection
