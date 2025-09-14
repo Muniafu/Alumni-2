@@ -1,147 +1,182 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('My Profile') }}
-            <span class="float-right">
-                <span class="text-sm font-medium">Profile Completion: </span>
-                <span class="text-sm font-bold
-                    {{ $user->profile->profile_completion >= 80 ? 'text-green-600' :
-                       ($user->profile->profile_completion >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
-                    {{ $user->profile->profile_completion }}%
-                </span>
-                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                    <div class="bg-blue-600 h-2.5 rounded-full"
-                         style="width: {{ $user->profile->profile_completion }}%">
-                    </div>
-                </div>
-            </span>
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <form method="POST" action="{{ route('student.profile.update') }}">
-                        @csrf
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-id-card me-2"></i> My Profile
+    </h2>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Basic Information -->
-                            <div class="space-y-6">
-                                <h3 class="text-lg font-medium text-gray-900">Basic Information</h3>
-
-                                <!-- Name -->
-                                <div>
-                                    <x-input-label for="name" :value="__('Name')" />
-                                    <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
-                                        :value="old('name', $user->name)" required autofocus />
-                                    <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                                </div>
-
-                                <!-- Student ID (readonly) -->
-                                <div>
-                                    <x-input-label for="student_id" :value="__('Student ID')" />
-                                    <x-text-input id="student_id" class="block mt-1 w-full bg-gray-100" type="text"
-                                        name="student_id" :value="old('student_id', $user->student_id)" readonly />
-                                </div>
-
-                                <!-- Graduation Year (readonly) -->
-                                <div>
-                                    <x-input-label for="graduation_year" :value="__('Graduation Year')" />
-                                    <x-text-input id="graduation_year" class="block mt-1 w-full bg-gray-100" type="text"
-                                        name="graduation_year" :value="old('graduation_year', $user->graduation_year)" readonly />
-                                </div>
-
-                                <!-- Program (readonly) -->
-                                <div>
-                                    <x-input-label for="program" :value="__('Program')" />
-                                    <x-text-input id="program" class="block mt-1 w-full bg-gray-100" type="text"
-                                        name="program" :value="old('program', $user->program)" readonly />
-                                </div>
-                            </div>
-
-                            <!-- Contact Information -->
-                            <div class="space-y-6">
-                                <h3 class="text-lg font-medium text-gray-900">Contact Information</h3>
-
-                                <!-- Phone -->
-                                <div>
-                                    <x-input-label for="phone" :value="__('Phone')" />
-                                    <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone"
-                                        :value="old('phone', $user->profile->phone)" />
-                                    <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-                                </div>
-
-                                <!-- Address -->
-                                <div>
-                                    <x-input-label for="address" :value="__('Address')" />
-                                    <x-text-input id="address" class="block mt-1 w-full" type="text" name="address"
-                                        :value="old('address', $user->profile->address)" />
-                                    <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                                </div>
-                            </div>
-
-                            <!-- Bio and Social Links -->
-                            <div class="md:col-span-2 space-y-6">
-                                <h3 class="text-lg font-medium text-gray-900">About You</h3>
-
-                                <!-- Bio -->
-                                <div>
-                                    <x-input-label for="bio" :value="__('Bio')" />
-                                    <textarea id="bio" name="bio" rows="3"
-                                        class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('bio', $user->profile->bio) }}</textarea>
-                                    <x-input-error :messages="$errors->get('bio')" class="mt-2" />
-                                </div>
-
-                                <!-- Skills -->
-                                <div>
-                                    <x-input-label for="skills" :value="__('Skills (comma separated)')" />
-                                    <x-text-input id="skills" class="block mt-1 w-full" type="text" name="skills"
-                                        :value="old('skills', implode(', ', $user->profile->skills ?? []))"
-                                        placeholder="e.g., PHP, JavaScript, Project Management" />
-                                    <x-input-error :messages="$errors->get('skills')" class="mt-2" />
-                                </div>
-
-                                <!-- Interests -->
-                                <div>
-                                    <x-input-label for="interests" :value="__('Interests')" />
-                                    <x-text-input id="interests" class="block mt-1 w-full" type="text" name="interests"
-                                        :value="old('interests', implode(', ', $user->profile->interests ?? []))"
-                                        placeholder="e.g., Web Development, Data Science" />
-                                    <x-input-error :messages="$errors->get('interests')" class="mt-2" />
-                                </div>
-
-                                <!-- Social Links -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- LinkedIn -->
-                                    <div>
-                                        <x-input-label for="linkedin" :value="__('LinkedIn Profile')" />
-                                        <x-text-input id="linkedin" class="block mt-1 w-full" type="url" name="linkedin"
-                                            :value="old('linkedin', $user->profile->getSocialLink('linkedin'))"
-                                            placeholder="https://linkedin.com/in/username" />
-                                        <x-input-error :messages="$errors->get('linkedin')" class="mt-2" />
-                                    </div>
-
-                                    <!-- Twitter -->
-                                    <div>
-                                        <x-input-label for="twitter" :value="__('Twitter Profile')" />
-                                        <x-text-input id="twitter" class="block mt-1 w-full" type="url" name="twitter"
-                                            :value="old('twitter', $user->profile->getSocialLink('twitter'))"
-                                            placeholder="https://twitter.com/username" />
-                                        <x-input-error :messages="$errors->get('twitter')" class="mt-2" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end mt-6">
-                            <x-primary-button class="ml-3">
-                                {{ __('Update Profile') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
-                </div>
+    <!-- Profile Completion -->
+    <div class="text-end">
+        <span class="small fw-medium">Profile Completion:</span>
+        <span class="small fw-bold
+            @if($user->profile->profile_completion >= 80) text-success
+            @elseif($user->profile->profile_completion >= 50) text-warning
+            @else text-danger @endif">
+            {{ $user->profile->profile_completion }}%
+        </span>
+        <div class="progress mt-1" style="height: 6px;">
+            <div class="progress-bar bg-primary"
+                 role="progressbar"
+                 style="width: {{ $user->profile->profile_completion }}%;"
+                 aria-valuenow="{{ $user->profile->profile_completion }}"
+                 aria-valuemin="0" aria-valuemax="100">
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection
+
+@section('content')
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form method="POST" action="{{ route('student.profile.update') }}">
+                    @csrf
+
+                    <div class="row g-4">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <h5 class="text-dark fw-semibold mb-3">Basic Information</h5>
+
+                            <!-- Name -->
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Name</label>
+                                <input id="name" type="text" name="name"
+                                       value="{{ old('name', $user->name) }}"
+                                       class="form-control @error('name') is-invalid @enderror" required autofocus>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Student ID -->
+                            <div class="mb-3">
+                                <label for="student_id" class="form-label">Student ID</label>
+                                <input id="student_id" type="text"
+                                       value="{{ old('student_id', $user->student_id) }}"
+                                       class="form-control bg-light" readonly>
+                            </div>
+
+                            <!-- Graduation Year -->
+                            <div class="mb-3">
+                                <label for="graduation_year" class="form-label">Graduation Year</label>
+                                <input id="graduation_year" type="text"
+                                       value="{{ old('graduation_year', $user->graduation_year) }}"
+                                       class="form-control bg-light" readonly>
+                            </div>
+
+                            <!-- Program -->
+                            <div class="mb-3">
+                                <label for="program" class="form-label">Program</label>
+                                <input id="program" type="text"
+                                       value="{{ old('program', $user->program) }}"
+                                       class="form-control bg-light" readonly>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="col-md-6">
+                            <h5 class="text-dark fw-semibold mb-3">Contact Information</h5>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input id="phone" type="text" name="phone"
+                                       value="{{ old('phone', $user->profile->phone) }}"
+                                       class="form-control @error('phone') is-invalid @enderror">
+                                @error('phone')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Address -->
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <input id="address" type="text" name="address"
+                                       value="{{ old('address', $user->profile->address) }}"
+                                       class="form-control @error('address') is-invalid @enderror">
+                                @error('address')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- About You -->
+                        <div class="col-12">
+                            <h5 class="text-dark fw-semibold mb-3">About You</h5>
+
+                            <!-- Bio -->
+                            <div class="mb-3">
+                                <label for="bio" class="form-label">Bio</label>
+                                <textarea id="bio" name="bio" rows="3"
+                                          class="form-control @error('bio') is-invalid @enderror">{{ old('bio', $user->profile->bio) }}</textarea>
+                                @error('bio')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Skills -->
+                            <div class="mb-3">
+                                <label for="skills" class="form-label">Skills (comma separated)</label>
+                                <input id="skills" type="text" name="skills"
+                                       value="{{ old('skills', implode(', ', $user->profile->skills ?? [])) }}"
+                                       placeholder="e.g., PHP, JavaScript, Project Management"
+                                       class="form-control @error('skills') is-invalid @enderror">
+                                @error('skills')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Interests -->
+                            <div class="mb-3">
+                                <label for="interests" class="form-label">Interests</label>
+                                <input id="interests" type="text" name="interests"
+                                       value="{{ old('interests', implode(', ', $user->profile->interests ?? [])) }}"
+                                       placeholder="e.g., Web Development, Data Science"
+                                       class="form-control @error('interests') is-invalid @enderror">
+                                @error('interests')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <!-- Social Links -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="linkedin" class="form-label">LinkedIn Profile</label>
+                                    <input id="linkedin" type="url" name="linkedin"
+                                           value="{{ old('linkedin', $user->profile->getSocialLink('linkedin')) }}"
+                                           placeholder="https://linkedin.com/in/username"
+                                           class="form-control @error('linkedin') is-invalid @enderror">
+                                    @error('linkedin')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="twitter" class="form-label">Twitter Profile</label>
+                                    <input id="twitter" type="url" name="twitter"
+                                           value="{{ old('twitter', $user->profile->getSocialLink('twitter')) }}"
+                                           placeholder="https://twitter.com/username"
+                                           class="form-control @error('twitter') is-invalid @enderror">
+                                    @error('twitter')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fa-solid fa-save me-2"></i> Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
