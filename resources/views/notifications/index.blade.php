@@ -1,49 +1,66 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Your Notifications
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-sm sm:rounded-lg">
-                <div class="card-header d-flex justify-content-between align-items-center p-4 border-b">
-                    <h5 class="mb-0">Your Notifications</h5>
-                    <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">
-                            Mark All as Read
-                        </button>
-                    </form>
-                </div>
+@section('header')
+<div class="d-flex justify-content-between align-items-center">
+    <h2 class="fw-semibold text-primary mb-0">
+        <i class="fa-solid fa-bell me-2"></i> Your Notifications
+    </h2>
+    <form action="{{ route('notifications.markAllAsRead') }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-check me-1"></i> Mark All as Read
+        </button>
+    </form>
+</div>
+@endsection
 
-                <div class="card-body p-4">
-                    @if($notifications->isEmpty())
-                        <div class="alert alert-info">You have no notifications.</div>
-                    @else
-                        <div class="list-group">
-                            @foreach($notifications as $notification)
-                                <a href="{{ $notification->data['url'] ?? '#' }}"
-                                   class="list-group-item list-group-item-action flex-column align-items-start
-                                          @if($notification->unread()) list-group-item-primary @endif">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ $notification->data['message'] ?? 'Notification' }}</h6>
-                                        <small>{{ $notification->created_at->diffForHumans() }}</small>
-                                    </div>
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                @if($notifications->isEmpty())
+                    <div class="alert alert-info m-4 text-center">
+                        <i class="fa-solid fa-info-circle me-2"></i> You have no notifications.
+                    </div>
+                @else
+                    <div class="list-group list-group-flush">
+                        @foreach($notifications as $notification)
+                            <a href="{{ $notification->data['url'] ?? '#' }}"
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-start
+                                      @if($notification->unread()) list-group-item-primary @endif"
+                               aria-label="{{ $notification->data['message'] ?? 'Notification' }}">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-semibold">{{ $notification->data['message'] ?? 'Notification' }}</div>
                                     @if(isset($notification->data['type']))
-                                        <small class="text-muted">{{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}</small>
+                                        <small class="text-muted">
+                                            {{ ucfirst(str_replace('_', ' ', $notification->data['type'])) }}
+                                        </small>
                                     @endif
-                                </a>
-                            @endforeach
-                        </div>
+                                </div>
+                                <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                            </a>
+                        @endforeach
+                    </div>
 
-                        <div class="mt-3">
-                            {{ $notifications->links() }}
-                        </div>
-                    @endif
-                </div>
+                    <div class="mt-3 px-4">
+                        {{ $notifications->links('pagination::bootstrap-5') }}
+                    </div>
+                @endif
             </div>
         </div>
+
     </div>
-</x-app-layout>
+</div>
+
+@push('scripts')
+<script>
+    // Optional: highlight unread notifications on hover
+    document.querySelectorAll('.list-group-item').forEach(item => {
+        item.addEventListener('mouseenter', () => item.classList.add('shadow-sm'));
+        item.addEventListener('mouseleave', () => item.classList.remove('shadow-sm'));
+    });
+</script>
+@endpush
+@endsection
