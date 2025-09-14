@@ -1,188 +1,180 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Alumni Dashboard') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    @if(session('success'))
-                        <div class="mb-4 px-4 py-3 bg-green-100 border border-green-400 text-green-700 rounded">
-                            {{ session('success') }}
+@section('content')
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h2 class="fw-bold text-primary">Alumni Dashboard</h2>
+        </div>
+
+        {{-- Success Message --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    </div>
+
+    <div class="row g-4">
+        {{-- Profile Summary --}}
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h4 class="fw-semibold text-dark mb-3">Welcome back, {{ $user->name }}!</h4>
+
+                    <div class="row gy-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">Student ID</small>
+                            <p class="fw-medium">{{ $user->student_id ?? 'Not provided' }}</p>
                         </div>
-                    @endif
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Profile Summary -->
-                        <div class="md:col-span-2">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Welcome back, {{ $user->name }}!</h3>
-
-                            <div class="bg-gray-50 p-6 rounded-lg shadow">
-                                <h4 class="font-medium text-gray-900 mb-2">Your Information</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-sm text-gray-500">Student ID</p>
-                                        <p class="font-medium">{{ $user->student_id ?? 'Not provided' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Graduation Year</p>
-                                        <p class="font-medium">{{ $user->graduation_year ?? 'Not provided' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Program</p>
-                                        <p class="font-medium">{{ $user->program ?? 'Not provided' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Current Job</p>
-                                        <p class="font-medium">{{ $profile->current_job ?? 'Not provided' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Company</p>
-                                        <p class="font-medium">{{ $profile->current_company ?? 'Not provided' }}</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm text-gray-500">Email</p>
-                                        <p class="font-medium">{{ $user->email }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Graduation Year</small>
+                            <p class="fw-medium">{{ $user->graduation_year ?? 'Not provided' }}</p>
                         </div>
-
-                        <!-- Quick Actions -->
-                        <div>
-                            <h4 class="font-medium text-gray-900 mb-4">Quick Actions</h4>
-                            <div class="space-y-4">
-                                @can('create jobs')
-                                <a href="{{ route('jobs.create') }}" class="block p-4 bg-white border border-gray-200 rounded-lg shadow hover:border-blue-500 transition-colors">
-                                    <h5 class="font-medium text-gray-900">Post a Job Opportunity</h5>
-                                    <p class="text-sm text-gray-500 mt-1">Share job openings with students</p>
-                                </a>
-                                @endcan
-
-                                @can('view events')
-                                <a href="{{ route('events.index') }}" class="block p-4 bg-white border border-gray-200 rounded-lg shadow hover:border-blue-500 transition-colors">
-                                    <h5 class="font-medium text-gray-900">View Upcoming Events</h5>
-                                    <p class="text-sm text-gray-500 mt-1">See and RSVP to alumni events</p>
-                                </a>
-                                @endcan
-
-                                <a href="{{ route('alumni.profile') }}" class="block p-4 bg-white border border-gray-200 rounded-lg shadow hover:border-blue-500 transition-colors">
-                                    <h5 class="font-medium text-gray-900">Update Profile</h5>
-                                    <p class="text-sm text-gray-500 mt-1">Keep your information current</p>
-                                </a>
-
-                                @can('mentor students')
-                                <a href="{{ route('mentorship.index') }}" class="block p-4 bg-white border border-gray-200 rounded-lg shadow hover:border-blue-500 transition-colors">
-                                    <h5 class="font-medium text-gray-900">Mentorship Program</h5>
-                                    <p class="text-sm text-gray-500 mt-1">Guide current students</p>
-                                </a>
-                                @endcan
-                            </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Program</small>
+                            <p class="fw-medium">{{ $user->program ?? 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Current Job</small>
+                            <p class="fw-medium">{{ $profile->current_job ?? 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Company</small>
+                            <p class="fw-medium">{{ $profile->current_company ?? 'Not provided' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Email</small>
+                            <p class="fw-medium">{{ $user->email }}</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Additional Alumni Sections -->
-                    <div class="mt-8">
-                        <!-- Mentorship Opportunities -->
-                        @can('mentor students')
-                        <div class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Mentorship Opportunities</h3>
-                            <div class="bg-blue-50 p-6 rounded-lg">
-                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                                    <div class="mb-4 md:mb-0">
-                                        <h4 class="font-medium text-gray-900">Become a Mentor</h4>
-                                        <p class="text-sm text-gray-600 mt-1">Share your experience with current students</p>
-                                    </div>
-                                    <a href="{{ route('mentorship.create') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                        Sign Up as Mentor
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        @endcan
+        {{-- Quick Actions --}}
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="fw-semibold text-dark mb-3">Quick Actions</h5>
+                    <div class="list-group list-group-flush">
 
-                        <!-- Your Recent Job Postings -->
                         @can('create jobs')
-                        <div class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Your Recent Job Postings</h3>
-                            @if($userJobPostings->count() > 0)
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($userJobPostings as $job)
-                                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 transition-colors">
-                                    <h4 class="font-medium text-gray-900">{{ $job->title }}</h4>
-                                    <p class="text-sm text-gray-500 mt-1">{{ $job->company }}</p>
-                                    <div class="mt-2 flex items-center text-sm text-gray-600">
-                                        <span class="mr-2">{{ $job->location }}</span>
-                                        •
-                                        <span class="ml-2">{{ $job->employment_type }}</span>
-                                    </div>
-                                    <div class="mt-2 text-sm">
-                                        <span class="text-gray-600">{{ $job->applications_count }} applications</span>
-                                    </div>
-                                    <a href="{{ route('jobs.show', $job) }}" class="inline-block mt-3 text-sm text-blue-600 hover:text-blue-800">
-                                        View Details
-                                    </a>
-                                </div>
-                                @endforeach
-                            </div>
-                            <div class="mt-4 text-right">
-                                <a href="{{ route('jobs.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    View All Your Postings →
-                                </a>
-                            </div>
-                            @else
-                            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                                <p class="text-yellow-800">You haven't posted any jobs yet. Share opportunities with students!</p>
-                                <a href="{{ route('jobs.create') }}" class="inline-block mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    Post Your First Job
-                                </a>
-                            </div>
-                            @endif
-                        </div>
+                        <a href="{{ route('jobs.create') }}" class="list-group-item list-group-item-action">
+                            <strong>Post a Job Opportunity</strong>
+                            <p class="small text-muted mb-0">Share job openings with students</p>
+                        </a>
                         @endcan
 
-                        <!-- Upcoming Alumni Events -->
                         @can('view events')
-                        <div class="mb-8">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">Upcoming Alumni Events</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @forelse($upcomingAlumniEvents as $event)
-                                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 hover:border-blue-500 transition-colors">
-                                    <h4 class="font-medium text-gray-900">{{ $event->title }}</h4>
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        {{ $event->start_date->format('M j, Y g:i A') }}
-                                    </p>
-                                    <p class="text-sm text-gray-600 mt-2 line-clamp-2">
-                                        {{ $event->description }}
-                                    </p>
-                                    <div class="mt-3 flex justify-between items-center">
-                                        <span class="text-sm {{ $event->is_registered ? 'text-green-600' : 'text-gray-600' }}">
-                                            {{ $event->is_registered ? 'Registered' : 'Not registered' }}
-                                        </span>
-                                        <a href="{{ route('events.show', $event) }}" class="text-sm text-blue-600 hover:text-blue-800">
-                                            {{ $event->is_registered ? 'View Details' : 'Register Now' }}
-                                        </a>
-                                    </div>
-                                </div>
-                                @empty
-                                <p class="text-gray-500">No upcoming alumni events scheduled</p>
-                                @endforelse
-                            </div>
-                            @if($upcomingAlumniEvents->count() > 0)
-                            <div class="mt-4 text-right">
-                                <a href="{{ route('events.index') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    View All Events →
-                                </a>
-                            </div>
-                            @endif
-                        </div>
+                        <a href="{{ route('events.index') }}" class="list-group-item list-group-item-action">
+                            <strong>View Upcoming Events</strong>
+                            <p class="small text-muted mb-0">See and RSVP to alumni events</p>
+                        </a>
+                        @endcan
+
+                        <a href="{{ route('alumni.profile') }}" class="list-group-item list-group-item-action">
+                            <strong>Update Profile</strong>
+                            <p class="small text-muted mb-0">Keep your information current</p>
+                        </a>
+
+                        @can('mentor students')
+                        <a href="{{ route('mentorship.index') }}" class="list-group-item list-group-item-action">
+                            <strong>Mentorship Program</strong>
+                            <p class="small text-muted mb-0">Guide current students</p>
+                        </a>
                         @endcan
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>
+
+    {{-- Additional Alumni Sections --}}
+    <div class="mt-5">
+
+        {{-- Mentorship Opportunities --}}
+        @can('mentor students')
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <div>
+                    <h5 class="fw-semibold text-dark">Mentorship Opportunities</h5>
+                    <p class="small text-muted mb-2">Share your experience with current students</p>
+                </div>
+                <a href="{{ route('mentorship.create') }}" class="btn btn-primary">
+                    Sign Up as Mentor
+                </a>
+            </div>
+        </div>
+        @endcan
+
+        {{-- Job Postings --}}
+        @can('create jobs')
+        <div class="mb-4">
+            <h5 class="fw-semibold mb-3">Your Recent Job Postings</h5>
+            @if($userJobPostings->count() > 0)
+                <div class="row g-3">
+                    @foreach($userJobPostings as $job)
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="fw-semibold">{{ $job->title }}</h6>
+                                <p class="small text-muted mb-1">{{ $job->company }}</p>
+                                <p class="small text-muted">{{ $job->location }} • {{ $job->employment_type }}</p>
+                                <p class="small text-muted">{{ $job->applications_count }} applications</p>
+                                <a href="{{ route('jobs.show', $job) }}" class="stretched-link text-decoration-none text-primary small">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="text-end mt-3">
+                    <a href="{{ route('jobs.index') }}" class="btn btn-link text-primary fw-medium">View All Your Postings →</a>
+                </div>
+            @else
+                <div class="alert alert-warning">
+                    <p class="mb-1">You haven't posted any jobs yet. Share opportunities with students!</p>
+                    <a href="{{ route('jobs.create') }}" class="fw-semibold text-primary">Post Your First Job</a>
+                </div>
+            @endif
+        </div>
+        @endcan
+
+        {{-- Alumni Events --}}
+        @can('view events')
+        <div>
+            <h5 class="fw-semibold mb-3">Upcoming Alumni Events</h5>
+            @if($upcomingAlumniEvents->count() > 0)
+                <div class="row g-3">
+                    @foreach($upcomingAlumniEvents as $event)
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h6 class="fw-semibold">{{ $event->title }}</h6>
+                                <p class="small text-muted">{{ $event->start_date->format('M j, Y g:i A') }}</p>
+                                <p class="small text-muted">{{ Str::limit($event->description, 100) }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="badge {{ $event->is_registered ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $event->is_registered ? 'Registered' : 'Not registered' }}
+                                    </span>
+                                    <a href="{{ route('events.show', $event) }}" class="small text-primary">
+                                        {{ $event->is_registered ? 'View Details' : 'Register Now' }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="text-end mt-3">
+                    <a href="{{ route('events.index') }}" class="btn btn-link text-primary fw-medium">View All Events →</a>
+                </div>
+            @else
+                <p class="text-muted">No upcoming alumni events scheduled</p>
+            @endif
+        </div>
+        @endcan
+    </div>
+</div>
+@endsection
