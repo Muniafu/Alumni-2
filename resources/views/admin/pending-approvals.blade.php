@@ -1,87 +1,97 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="fw-semibold fs-4 text-dark">
             {{ __('Pending Approvals') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    @if(session('success'))
-                        <div class="mb-4 px-4 py-3 bg-green-100 border border-green-400 text-green-700 rounded">
-                            {{ session('success') }}
-                        </div>
-                    @endif
+    <div class="container-fluid py-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                {{-- Success Message --}}
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
 
-                    @if($users->isEmpty())
-                        <p class="text-gray-500">No users pending approval.</p>
-                    @else
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
+                {{-- Empty State --}}
+                @if($users->isEmpty())
+                    <div class="text-center py-5">
+                        <i class="bi bi-person-x display-4 text-muted mb-3"></i>
+                        <p class="text-muted fs-5">No users pending approval.</p>
+                    </div>
+                @else
+                    {{-- Table --}}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Name</th>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Email</th>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Role</th>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Student ID</th>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Graduation Year</th>
+                                    <th scope="col" class="text-uppercase small fw-semibold text-secondary">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($users as $user)
                                     <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Name
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Email
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Role
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Student ID
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Graduation Year
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    @foreach($users as $user)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="flex items-center">
-                                                    <div class="text-sm font-medium text-gray-900">
-                                                        {{ $user->name }}
-                                                    </div>
+                                        {{-- Name --}}
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px;">
+                                                    {{ strtoupper(substr($user->name, 0, 1)) }}
                                                 </div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $user->email }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $user->roles->first()->name }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $user->student_id }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {{ $user->graduation_year }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <form action="{{ route('admin.approve-user', $user) }}" method="POST" class="inline">
+                                                <span class="fw-semibold text-dark">{{ $user->name }}</span>
+                                            </div>
+                                        </td>
+
+                                        {{-- Email --}}
+                                        <td class="text-muted">{{ $user->email }}</td>
+
+                                        {{-- Role --}}
+                                        <td>
+                                            <span class="badge bg-info text-dark">
+                                                {{ ucfirst($user->roles->first()->name) }}
+                                            </span>
+                                        </td>
+
+                                        {{-- Student ID --}}
+                                        <td class="text-muted">{{ $user->student_id }}</td>
+
+                                        {{-- Graduation Year --}}
+                                        <td class="text-muted">{{ $user->graduation_year }}</td>
+
+                                        {{-- Actions --}}
+                                        <td>
+                                            <div class="d-flex">
+                                                {{-- Approve --}}
+                                                <form action="{{ route('admin.approve-user', $user) }}" method="POST" class="me-2">
                                                     @csrf
-                                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-3">Approve</button>
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-check-lg me-1"></i> Approve
+                                                    </button>
                                                 </form>
-                                                <form action="{{ route('admin.reject-user', $user) }}" method="POST" class="inline">
+
+                                                {{-- Reject --}}
+                                                <form action="{{ route('admin.reject-user', $user) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-900">Reject</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-x-lg me-1"></i> Reject
+                                                    </button>
                                                 </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

@@ -1,58 +1,74 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Generate Reports') }}
+        <h2 class="fw-semibold fs-4 text-dark">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i> {{ __('Generate Reports') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    @if (session('error'))
-                        <div class="mb-4 px-4 py-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                            {{ session('error') }}
-                        </div>
-                    @endif
+    <div class="container-fluid py-4">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-body">
 
-                    <form action="{{ route('admin.reports.generate') }}" method="POST">
-                        @csrf
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <x-input-label for="report_type" :value="__('Report Type')" />
-                                <select name="report_type" id="report_type" class="form-select rounded-md shadow-sm w-full" required>
-                                    <option value="">Select Report Type</option>
-                                    <option value="users">Users Report</option>
-                                    <option value="events">Events Report</option>
-                                    <option value="jobs">Job Postings Report</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('report_type')" class="mt-2" />
-                            </div>
-                            <div>
-                                <x-input-label for="format" :value="__('Format')" />
-                                <select name="format" id="format" class="form-select rounded-md shadow-sm w-full" required>
-                                    <option value="">Select Format</option>
-                                    <option value="csv">CSV</option>
-                                    <option value="xlsx">Excel (XLSX)</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('format')" class="mt-2" />
-                            </div>
-                            <div>
-                                <x-input-label for="start_date" :value="__('Start Date (Optional)')" />
-                                <x-text-input type="date" name="start_date" id="start_date" class="w-full" />
-                                <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
-                            </div>
-                            <div>
-                                <x-input-label for="end_date" :value="__('End Date (Optional)')" />
-                                <x-text-input type="date" name="end_date" id="end_date" class="w-full" />
-                                <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
-                            </div>
+                {{-- Error Alert --}}
+                @if (session('error'))
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <div>{{ session('error') }}</div>
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.reports.generate') }}" method="POST">
+                    @csrf
+                    <div class="row g-4">
+                        {{-- Report Type --}}
+                        <div class="col-md-6">
+                            <label for="report_type" class="form-label fw-semibold">Report Type</label>
+                            <select name="report_type" id="report_type"
+                                    class="form-select @error('report_type') is-invalid @enderror" required>
+                                <option value="">Select Report Type</option>
+                                <option value="users">Users Report</option>
+                                <option value="events">Events Report</option>
+                                <option value="jobs">Job Postings Report</option>
+                            </select>
+                            @error('report_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                        <div class="mt-6 flex justify-end">
-                            <x-primary-button>Generate Report</x-primary-button>
+
+                        {{-- Format --}}
+                        <div class="col-md-6">
+                            <label for="format" class="form-label fw-semibold">Format</label>
+                            <select name="format" id="format"
+                                    class="form-select @error('format') is-invalid @enderror" required>
+                                <option value="">Select Format</option>
+                                <option value="csv">CSV</option>
+                                <option value="xlsx">Excel (XLSX)</option>
+                            </select>
+                            @error('format') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
-                    </form>
-                </div>
+
+                        {{-- Start Date --}}
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label fw-semibold">Start Date (Optional)</label>
+                            <input type="date" id="start_date" name="start_date"
+                                   class="form-control @error('start_date') is-invalid @enderror">
+                            @error('start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- End Date --}}
+                        <div class="col-md-6">
+                            <label for="end_date" class="form-label fw-semibold">End Date (Optional)</label>
+                            <input type="date" id="end_date" name="end_date"
+                                   class="form-control @error('end_date') is-invalid @enderror">
+                            @error('end_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-success shadow-sm">
+                            <i class="bi bi-file-earmark-bar-graph me-1"></i> Generate Report
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
