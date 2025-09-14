@@ -1,42 +1,62 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Thread: {{ $thread->title }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+@section('header')
+<h2 class="fw-semibold text-primary">
+    Edit Thread: {{ $thread->title }}
+</h2>
+@endsection
+
+@section('content')
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-8">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
                 <form method="POST" action="{{ route('forum.threads.update', $thread) }}">
                     @csrf
                     @method('PUT')
-                    <div class="mb-4">
-                        <label for="title" class="block text-gray-700 text-sm font-bold mb-2">
+
+                    <!-- Thread Title -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">
                             Thread Title
                         </label>
-                        <input type="text" name="title" id="title" value="{{ old('title', $thread->title) }}" required
-                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <input type="text" name="title" id="title"
+                               value="{{ old('title', $thread->title) }}" required
+                               class="form-control @error('title') is-invalid @enderror"
+                               placeholder="Enter thread title">
+                        @error('title')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div class="mb-4">
-                        <label for="content" class="block text-gray-700 text-sm font-bold mb-2">
+
+                    <!-- Thread Content -->
+                    <div class="mb-3">
+                        <label for="content" class="form-label fw-semibold">
                             Content
                         </label>
                         <textarea name="content" id="content" rows="10" required
-                                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">{{ old('content', $thread->content) }}</textarea>
+                                  class="form-control @error('content') is-invalid @enderror"
+                                  placeholder="Update your message here">{{ old('content', $thread->content) }}</textarea>
+                        @error('content')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div class="flex items-center justify-end space-x-4">
-                        <a href="{{ route('forum.threads.show', $thread) }}"
-                           class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('forum.threads.show', $thread) }}" class="btn btn-secondary">
                             Cancel
                         </a>
-                        <button type="submit"
-                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        <button type="submit" class="btn btn-primary">
                             Update Thread
                         </button>
                     </div>
+
                 </form>
             </div>
         </div>
+
     </div>
-</x-app-layout>
+</div>
+@endsection
