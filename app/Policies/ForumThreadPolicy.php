@@ -2,9 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\ForumThread;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\ForumThread;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ForumThreadPolicy
@@ -12,62 +11,34 @@ class ForumThreadPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any models.
+     * Anyone approved can view threads.
      */
-    public function viewAny(User $user)
+    public function view(User $user, ForumThread $thread): bool
     {
-        //
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Only approved users can create threads.
      */
-    public function view(User $user, ForumThread $forumThread)
+    public function create(User $user): bool
     {
-        //
+        return $user->is_approved;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Author or admin can update.
      */
-    public function create(User $user)
+    public function update(User $user, ForumThread $thread): bool
     {
-        //
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, ForumThread $thread)
-    {
-
         return $user->id === $thread->user_id || $user->hasRole('admin');
-
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Author or admin can delete.
      */
-    public function delete(User $user, ForumThread $thread)
+    public function delete(User $user, ForumThread $thread): bool
     {
-
         return $user->id === $thread->user_id || $user->hasRole('admin');
-        
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, ForumThread $forumThread)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, ForumThread $forumThread)
-    {
-        //
     }
 }

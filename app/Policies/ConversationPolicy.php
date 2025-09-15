@@ -5,68 +5,40 @@ namespace App\Policies;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Auth\Access\Response;
 
 class ConversationPolicy
 {
     use HandlesAuthorization;
+
     /**
-     * Determine whether the user can view any models.
+     * User can view any conversations (just return true since filtering is done in the query).
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
-     * Determine whether the user can view the model.
+     * User can view a specific conversation if they are a participant.
      */
-    public function view(User $user, Conversation $conversation)
+    public function view(User $user, Conversation $conversation): bool
     {
-
-        return $conversation->users->contains($user);
-
+        return $conversation->users->contains($user->id);
     }
 
     /**
-     * Determine whether the user can create models.
+     * User can create conversations if they are approved.
      */
-    public function create(User $user)
+    public function create(User $user): bool
     {
-        //
+        return $user->is_approved;
     }
 
     /**
-     * Determine whether the user can update the model.
+     * User can delete a conversation only if they are a participant.
      */
-    public function update(User $user, Conversation $conversation)
+    public function delete(User $user, Conversation $conversation): bool
     {
-        //
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Conversation $conversation)
-    {
-
-        return $conversation->users->contains($user);
-
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Conversation $conversation)
-    {
-        //
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Conversation $conversation)
-    {
-        //
+        return $conversation->users->contains($user->id);
     }
 }

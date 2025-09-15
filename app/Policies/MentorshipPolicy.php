@@ -19,6 +19,13 @@ class MentorshipPolicy
         //
     }
 
+    public function before(User $user)
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+    }
+
     /**
      * Determine whether the user can view the model.
      */
