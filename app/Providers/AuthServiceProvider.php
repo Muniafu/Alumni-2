@@ -4,6 +4,12 @@ namespace App\Providers;
 
 use App\Models\Event;
 use App\Models\JobPosting;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\ForumThread;
+use App\Models\ForumPost;
+use App\Policies\ForumThreadPolicy;
+use App\Policies\ForumPostPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\UserPolicy;
@@ -11,6 +17,8 @@ use App\Policies\EventPolicy;
 use App\Models\User;
 use App\Policies\JobPostingPolicy;
 use App\Policies\ReportPolicy;
+use App\Policies\ConversationPolicy;
+use App\Policies\MessagePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -24,6 +32,10 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         JobPosting::class => JobPostingPolicy::class,
         User::class => ReportPolicy::class,
+        Conversation::class => ConversationPolicy::class,
+        Message::class => MessagePolicy::class,
+        ForumThread::class => ForumThreadPolicy::class,
+        ForumPost::class   => ForumPostPolicy::class,
     ];
 
     /**
@@ -52,7 +64,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('view-job-applications', [JobPostingPolicy::class, 'viewApplications']);
         Gate::define('manage-job-applications', [JobPostingPolicy::class, 'updateApplications']);
 
-        Gate::define('generate-reports', [UserPolicy::class, 'generateReports']);
+        Gate::define('generate-reports', [ReportPolicy::class, 'generateReports']);
 
         Gate::define('view-events', [EventPolicy::class, 'viewAny']);
         Gate::define('create-events', [EventPolicy::class, 'create']);
