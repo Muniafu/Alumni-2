@@ -7,17 +7,25 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Mentorship;
+use App\Models\MentorshipRequest;
 
 class MentorshipStatusChangedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $mentorship;
+    public $model;
     public $status;
 
-    public function __construct(Mentorship $mentorship, $status)
+    /**
+     * Accept either a Mentorship or MentorshipRequest model.
+     */
+    public function __construct($model, string $status)
     {
-        $this->mentorship = $mentorship;
+        if (!($model instanceof Mentorship || $model instanceof MentorshipRequest)) {
+            throw new \InvalidArgumentException('Model must be Mentorship or MentorshipRequest');
+        }
+
+        $this->model = $model;
         $this->status = $status;
     }
 
@@ -28,23 +36,40 @@ class MentorshipStatusChangedNotification extends Notification implements Should
 
     public function toArray($notifiable)
     {
-        $message = $this->status === 'completed'
-            ? "Your mentorship with {$this->mentorship->mentor->name} has been completed"
-            : "Your mentorship with {$this->mentorship->mentor->name} has been cancelled";
 
-        if ($notifiable->id === $this->mentorship->mentor_id) {
-            $message = $this->status === 'completed'
-                ? "Your mentorship with {$this->mentorship->mentee->name} has been completed"
-                : "Your mentorship with {$this->mentorship->mentee->name} has been cancelled";
+        $counterpart = $notifiable->id === $this->model->mentor_id ? $this->model->mentee->name : $this->model->mentor->name;
+
+        // ✅ Handle MentorshipRequest (rejected case)
+        if ($this->model instanceof MentorshipRequest) {
+            return [
+                'request_id' => $this->model->id,
+                'status' => $this->status,
+                'message' => "Your mentorship request to {$this->model->mentor->name} was {$this->status}.",
+                'url' => route('mentorship.requests.sent'),
+                'type' => 'mentorship_request_status_changed'
+            ];
         }
 
-        return [
-            'mentorship_id' => $this->mentorship->id,
-            'status' => $this->status,
-            'message' => $message,
-            'url' => route('mentorship.show', $this->mentorship),
-            'type' => 'mentorship_status_changed'
-        ];
+        // ✅ Handle Mentorship (active, completed, cancelled)
+        if ($this->model instanceof Mentorship) {
+            $message = $this->status === 'completed'
+                ? "Your mentorship with {$this->model->mentor->name} has been completed"
+                : "Your mentorship with {$this->model->mentor->name} has been {$this->status}";
+
+            if ($notifiable->id === $this->model->mentor_id) {
+                $message = $this->status === 'completed'
+                    ? "Your mentorship with {$this->model->mentee->name} has been completed"
+                    : "Your mentorship with {$this->model->mentee->name} has been {$this->status}";
+            }
+
+            return [
+                'mentorship_id' => $this->model->id,
+                'status' => $this->status,
+                'message' => $message,
+                'url' => route('mentorship.show', $this->model),
+                'type' => 'mentorship_status_changed'
+            ];
+        }
     }
 
     public function toBroadcast($notifiable)

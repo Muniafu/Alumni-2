@@ -35,9 +35,11 @@ class UserApprovedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+                    ->subject('Your Account Has Been Approved')
+                    ->greeting('Hello ' . $notifiable->name . ',')
+                    ->line('We are pleased to inform you that your account has been approved.')
+                    ->action('Login Now', url('/login'))
+                    ->line('Welcome aboard!');
     }
 
     /**

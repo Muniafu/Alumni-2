@@ -39,9 +39,11 @@ class NewJobPostedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+                    ->subject("New Job Posted: {$this->job->title}")
+                    ->line("{$this->job->poster->name} has posted a new {$this->job->type}.")
+                    ->line("Company: {$this->job->company}")
+                    ->line("Location: {$this->job->location}")
+                    ->action('View Job Posting', route('jobs.show', $this->job->id));
     }
 
     /**

@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\JobApplication;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class ApplicationStatusChangedNotification extends Notification implements ShouldQueue
 {
@@ -23,7 +24,7 @@ class ApplicationStatusChangedNotification extends Notification implements Shoul
 
     public function via($notifiable)
     {
-        return ['database', 'mail'];
+        return ['database', 'mail', 'broadcast'];
     }
 
     public function toMail($notifiable)
@@ -49,4 +50,10 @@ class ApplicationStatusChangedNotification extends Notification implements Shoul
             'type' => 'application_status_changed'
         ];
     }
+
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
+    }
+
 }
