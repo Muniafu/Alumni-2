@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\JobNotification;
 
 class JobPosting extends Model
 {
@@ -105,6 +106,11 @@ class JobPosting extends Model
         }
 
         return !$this->applications()->where('user_id', $user->id)->exists();
+    }
+
+    protected static function booted()
+    {
+        //
     }
 
 }

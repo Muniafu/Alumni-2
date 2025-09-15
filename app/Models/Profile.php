@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\ProfileCompletedNotification;
 
 class Profile extends Model
 {
@@ -30,9 +31,9 @@ class Profile extends Model
     ];
 
     protected $attributes = [
-        'social_links' => '[]',
-        'skills' => '[]',
-        'interests' => '[]',
+        'social_links' => [],
+        'skills' => [],
+        'interests' => [],
         'profile_completion' => 0,
     ];
 
@@ -43,7 +44,7 @@ class Profile extends Model
 
     public function calculateCompletion(): int
     {
-        $totalFields = 13; // Total fields we're checking
+        $totalFields = 10;
         $completedFields = 0;
 
         // User fields
@@ -84,6 +85,10 @@ class Profile extends Model
 
         $this->profile_completion = $completionPercentage;
         $this->save();
+
+        if ($completionPercentage === 100) {
+            $this->user->notify(new ProfileCompletedNotification());
+        }
 
         return $completionPercentage;
     }

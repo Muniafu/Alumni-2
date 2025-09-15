@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\EventCreatedNotification;
 
 class Event extends Model
 {
@@ -58,7 +59,8 @@ class Event extends Model
 
     public function getAvailableSpotsAttribute()
     {
-        return $this->capacity ? $this->capacity - $this->attendees_going : null;
+        return $this->capacity ? max(0, $this->capacity - $this->attendees_going) : null;
+
     }
 
     public function isFull()
@@ -79,7 +81,7 @@ class Event extends Model
 
     public function scopeUpcoming($query)
     {
-        return $query->where('start', '>=', now());
+        return $query->where('start', '>', now());
     }
 
     public function scopePast($query)
@@ -92,4 +94,10 @@ class Event extends Model
         return $query->where('start', '<=', now())
             ->where('end', '>=', now());
     }
+
+    protected static function booted()
+    {
+       //
+    }
+
 }

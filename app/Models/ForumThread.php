@@ -20,6 +20,16 @@ class ForumThread extends Model
         'is_locked'
     ];
 
+    public function create(User $user): bool
+    {
+        return $user->is_approved;
+    }
+
+    public function view(User $user, ForumThread $thread): bool
+    {
+        return true; // anyone can view
+    }
+
     public function category()
     {
         return $this->belongsTo(ForumCategory::class, 'forum_category_id');
@@ -54,7 +64,7 @@ class ForumThread extends Model
     {
         return $query->where('is_pinned', false);
     }
-    
+
     // Relationships
     public function subscribers()
     {

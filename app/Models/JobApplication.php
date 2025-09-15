@@ -19,10 +19,6 @@ class JobApplication extends Model
         'notes',
     ];
 
-    protected $casts = [
-        'application_deadline' => 'date',
-    ];
-
     public function job()
     {
         return $this->belongsTo(JobPosting::class, 'job_posting_id');

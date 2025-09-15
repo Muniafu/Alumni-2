@@ -13,6 +13,7 @@ class MentorshipRequest extends Model
         'mentor_id',
         'mentee_id',
         'message',
+        'goal',
         'status',
     ];
 
@@ -40,5 +41,5 @@ class MentorshipRequest extends Model
     {
         return $query->where('mentee_id', $userId);
     }
-    
+
 }

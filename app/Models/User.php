@@ -51,6 +51,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_approved' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function profile()
@@ -63,6 +64,18 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
     public function scopePendingApproval($query)
     {
         return $query->where('is_approved', false);
@@ -72,4 +85,15 @@ class User extends Authenticatable
     {
         return $query->where('is_approved', true);
     }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->unreadNotifications()->count();
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->is_approved;
+    }
+    
 }
