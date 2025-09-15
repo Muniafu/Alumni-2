@@ -108,7 +108,6 @@ class JobPostingController extends Controller
             ? array_map('trim', explode(',', $request->skills_preferred))
             : null;
 
-        // Add authenticated user ID and default active status
         $validated['user_id'] = auth()->id();
         $validated['is_active'] = true;
 
@@ -119,12 +118,16 @@ class JobPostingController extends Controller
                 throw new \Exception('Failed to save job posting');
             }
 
-            // Notify admins and students about new job posting
-            $admins = User::role('admin')->get();
-            $students = User::role('student')->get();
+            // 🔔 Notify only approved students + admins
+            $students = User::query()
+                ->where('is_approved', true)
+                ->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                ->get();
 
-            Notification::send($admins, new NewJobPostedNotification($job));
+            $admins = User::role('admin')->get();
+
             Notification::send($students, new NewJobPostedNotification($job));
+            Notification::send($admins, new NewJobPostedNotification($job));
 
             return redirect()->route('jobs.show', $job)
                 ->with('success', 'Job posting created successfully');
@@ -216,7 +219,7 @@ class JobPostingController extends Controller
             'resume' => 'required|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        $resumePath = $request->file('resume')->store('resumes', 'public');
+        $resumePath = $request->file('resume')->store('resumes', 'private');
 
         $application = JobApplication::create([
             'job_posting_id' => $job->id,

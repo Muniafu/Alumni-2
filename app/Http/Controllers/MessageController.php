@@ -94,4 +94,5 @@ class MessageController extends Controller
             ->with('success', 'Message deleted successfully');
 
     }
+    
 }

@@ -100,10 +100,16 @@ class EventController extends Controller
 
         $event = Event::create($validated);
 
-        // Notify all users about new event
-        $users = User::where('id', '!=', auth()->id())->get();
-        Notification::send($users, new EventCreatedNotification($event));
+        // 🔔 Notify all approved students (and optionally alumni)
+        $recipients = User::query()
+            ->where('id', '!=', auth()->id())          // exclude creator
+            ->where('is_approved', true)               // only approved users
+            ->whereHas('roles', function ($q) {
+                $q->whereIn('name', ['student', 'alumni']);
+            })
+            ->get();
 
+        Notification::send($recipients, new EventCreatedNotification($event));
 
         return redirect()->route('events.show', $event)
             ->with('success', 'Event created successfully');
@@ -203,7 +209,7 @@ class EventController extends Controller
 
         // Notify event organizer about RSVP
         if ($event->organizer && $event->organizer->id != auth()->id()) {
-            $event->organizer->notify(new EventRsvpNotification($event, auth()->user(), $validated['status']));
+            $event->organizer->notify(new EventRsvpNotification($rsvp));
         }
 
         return back()->with('success', 'RSVP status updated');

@@ -7,15 +7,21 @@ use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = auth()->user()->notifications()->paginate(10);
-        return view('notifications.index', compact('notifications'));
+        $filter = $request->get('filter', 'all');
+
+        $notifications = $filter === 'unread'
+            ? auth()->user()->unreadNotifications()->paginate(10)
+            : auth()->user()->notifications()->paginate(10);
+
+        return view('notifications.index', compact('notifications', 'filter'));
     }
+
 
     public function markAsRead($id)
     {
-        $notification = auth()->user()->notifications()->where('id', $id)->first();
+        $notification = auth()->user()->notifications()->where('id', $id)->firstOrFail();
 
         if ($notification) {
             $notification->markAsRead();
@@ -29,4 +35,25 @@ class NotificationController extends Controller
         auth()->user()->unreadNotifications->markAsRead();
         return back()->with('success', 'All notifications marked as read');
     }
+
+    public function unreadCount()
+    {
+        return response()->json([
+            'count' => auth()->user()->unreadNotifications()->count()
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $notification = auth()->user()
+            ->notifications()
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $notification->delete();
+
+        return back()->with('success', 'Notification deleted');
+    }
+
+
 }

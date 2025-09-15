@@ -32,9 +32,15 @@ class ForumPostController extends Controller
     public function store(Request $request, ForumThread $thread)
     {
 
+        $this->authorize('create', [ForumPost::class, $thread]);
+
         $request->validate([
             'content' => 'required|string|min:5',
         ]);
+
+        if ($thread->is_locked) {
+            abort(403, 'This thread is locked.');
+        }
 
         $post = $thread->posts()->create([
             'user_id' => auth()->id(),
@@ -49,6 +55,10 @@ class ForumPostController extends Controller
         if ($thread->author_id != auth()->id() && !$thread->subscribers->contains($thread->author_id)) {
             $thread->author->notify(new NewForumPostNotification($post));
         }
+
+        // 🔔 Notify admins
+        $admins = \App\Models\User::role('admin')->get();
+        Notification::send($admins, new NewForumPostNotification($post));
 
         return redirect()->route('forum.threads.show', [
             'thread' => $thread,

@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\ForumCategory;
 use App\Models\ForumThread;
 use Illuminate\Support\Str;
+use App\Notifications\NewForumThreadNotification;
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
 
 class ForumThreadController extends Controller
 {
@@ -32,7 +35,6 @@ class ForumThreadController extends Controller
      */
     public function store(Request $request, ForumCategory $category)
     {
-
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string|min:10',
@@ -45,9 +47,16 @@ class ForumThreadController extends Controller
             'content' => $request->content,
         ]);
 
+        // 🔔 Notify admins about new thread
+        $admins = User::role('admin')->get();
+        Notification::send($admins, new NewForumThreadNotification($thread));
+
+        // 🔔 Optionally notify all users subscribed to this category
+        $subscribers = $category->subscribers()->where('user_id', '!=', auth()->id())->get();
+        Notification::send($subscribers, new NewForumThreadNotification($thread));
+
         return redirect()->route('forum.threads.show', $thread)
             ->with('success', 'Thread created successfully');
-
     }
 
     /**

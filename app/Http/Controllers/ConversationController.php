@@ -65,6 +65,9 @@ class ConversationController extends Controller
             'body' => $request->message,
         ]);
 
+        $messages = $conversation->messages()->with('sender')->latest()->paginate(15);
+
+
         return redirect()->route('conversations.show', $conversation)
             ->with('success', 'Conversation started successfully');
 
@@ -118,6 +121,15 @@ class ConversationController extends Controller
         return redirect()->route('conversations.index')
             ->with('success', 'Conversation deleted successfully');
 
+    }
+
+    // ConversationPolicy
+    public function view(User $user, Conversation $conversation) {
+        return $conversation->users->contains($user->id);
+    }
+
+    public function delete(User $user, Conversation $conversation) {
+        return $conversation->users->contains($user->id);
     }
 
 }

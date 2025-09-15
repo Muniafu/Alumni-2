@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\EventRsvpNotification;
+use App\Notifications\JobApplicationNotification;
 
 class StudentController extends Controller
 {
@@ -108,4 +110,54 @@ class StudentController extends Controller
             ],
         ];
     }
+
+    // RSVP to event
+    public function rsvpEvent(Request $request, Event $event)
+    {
+        Gate::authorize('rsvp events');
+
+        $user = Auth::user();
+
+        if ($event->isFull() && $request->status === 'going') {
+            return back()->with('error', 'This event is already full.');
+        }
+
+        $rsvp = $event->rsvps()->create([
+            'user_id' => $user->id,
+            'status' => $request->input('status', 'going'), // going | interested
+            'guests' => $request->input('guests', 0),
+            'notes' => $request->input('notes'),
+        ]);
+
+        // 🔔 Notify event organizer
+        $event->organizer->notify(new EventRsvpNotification($rsvp));
+
+        return back()->with('success', 'RSVP submitted successfully!');
+    }
+
+
+    // Apply to job posting
+    public function applyJob(Request $request, JobPosting $job)
+    {
+        Gate::authorize('apply-job');
+
+        $user = Auth::user();
+
+        if (!$job->canApply($user)) {
+            return back()->with('error', 'You cannot apply for this job.');
+        }
+
+        $application = $job->applications()->create([
+            'user_id' => $user->id,
+            'cover_letter' => $request->input('cover_letter'),
+            'resume' => $request->input('resume'),
+            'status' => 'pending',
+        ]);
+
+        // 🔔 Notify job poster
+        $job->poster->notify(new JobApplicationNotification($application));
+
+        return back()->with('success', 'Application submitted successfully!');
+    }
+
 }

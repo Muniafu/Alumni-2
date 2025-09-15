@@ -71,7 +71,7 @@ class ReportController extends Controller
                 'Student ID' => $user->student_id,
                 'Graduation Year' => $user->graduation_year,
                 'Program' => $user->program,
-                'Role' => $user->roles->first()->name,
+                'Role' => optional($user->roles->first())->name ?? 'N/A',
                 'Approved' => $user->is_approved ? 'Yes' : 'No',
                 'Approved At' => $user->approved_at?->format('Y-m-d H:i:s'),
                 'Current Job' => optional($user->profile)->current_job ?? '',
@@ -84,7 +84,7 @@ class ReportController extends Controller
 
         $filename = 'users-report-' . now()->format('Y-m-d');
 
-        return (new FastExcel($users))->download("{$filename}.{$format}");
+        return (new FastExcel($query))->download("{$filename}.{$format}");
     }
 
     protected function generateEventReport($format, $startDate, $endDate)

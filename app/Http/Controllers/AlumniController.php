@@ -26,7 +26,7 @@ class AlumniController extends Controller
             ->get();
 
         $upcomingAlumniEvents = Event::upcoming()
-            ->with(['rsvp' => function($query) use ($user) {
+            ->with(['rsvps' => function($query) use ($user) {
                 $query->where('user_id', $user->id);
             }])
             ->latest()

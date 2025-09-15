@@ -23,6 +23,7 @@ class UserSearchController extends Controller
                     ->orWhere('email', 'like', "%$search%")
                     ->orWhere('student_id', 'like', "%$search%")
                     ->orWhere('program', 'like', "%$search%")
+                    ->orWhere('skills', 'like', "%$search%")
                     ->orWhereHas('profile', function($q) use ($search) {
                         $q->where('current_job', 'like', "%$search%")
                             ->orWhere('company', 'like', "%$search%")
@@ -43,13 +44,16 @@ class UserSearchController extends Controller
             $query->role($request->role);
         }
 
-        $users = $query->paginate(15);
-        $graduationYears = User::select('graduation_year')
+        $users = $query->paginate(15)->appends($request->all());
+
+        $graduationYears = User::approved()
+            ->select('graduation_year')
             ->distinct()
             ->orderBy('graduation_year', 'desc')
             ->pluck('graduation_year');
 
-        $programs = User::select('program')
+        $programs = User::approved()
+            ->select('program')
             ->distinct()
             ->whereNotNull('program')
             ->orderBy('program')
@@ -63,5 +67,5 @@ class UserSearchController extends Controller
         $user->load('profile');
         return view('directory.show', compact('user'));
     }
-    
+
 }

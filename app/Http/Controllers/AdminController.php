@@ -153,7 +153,6 @@ class AdminController extends Controller
     {
         Gate::authorize('approve-users');
 
-        $user->delete();
 
         ActivityLog::create([
             'user_id' => auth()->id(),
@@ -166,6 +165,7 @@ class AdminController extends Controller
         // Notify user about rejection before deleting
         $user->notify(new UserRejectedNotification());
 
+        // Delete user after notification
         $user->delete();
 
 

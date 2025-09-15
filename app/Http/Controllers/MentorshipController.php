@@ -103,15 +103,29 @@ class MentorshipController extends Controller
             return back()->with('error', 'You have already sent a request to this mentor.');
         }
 
+        $existingMentorship = Mentorship::where('mentor_id', $mentor->id)
+            ->where('mentee_id', Auth::id())
+            ->where('status', 'active')
+            ->first();
+
+        if ($existingMentorship) {
+            return back()->with('error', 'You already have an active mentorship with this mentor.');
+        }
+
         $mentorshipRequest = MentorshipRequest::create([
             'mentor_id' => $mentor->id,
             'mentee_id' => Auth::id(),
             'message' => $request->message,
             'goal' => $request->goal,
+            'status' => 'pending',
         ]);
 
-        // Notify mentor about the request
+        // 🔔 Notify mentor
         $mentor->notify(new MentorshipRequestNotification($mentorshipRequest));
+
+        // 🔔 Notify all admins
+        $admins = User::role('admin')->get();
+        Notification::send($admins, new MentorshipRequestNotification($mentorshipRequest));
 
         return redirect()->route('mentorship.requests.sent')
             ->with('success', 'Mentorship request sent successfully');
@@ -149,17 +163,31 @@ class MentorshipController extends Controller
                 'mentee_id' => $mentorshipRequest->mentee_id,
                 'goal' => $mentorshipRequest->goal,
                 'start_date' => now(),
+                'status' => 'active',
             ]);
 
-            // Notify mentee about acceptance
+            // 🔔 Notify mentee
             $mentorshipRequest->mentee->notify(new MentorshipAcceptedNotification($mentorship));
 
-            return back()->with('success', 'Mentorship request accepted. A new mentorship has been established.');
+            // 🔔 Notify admins
+            $admins = User::role('admin')->get();
+            Notification::send($admins, new MentorshipAcceptedNotification($mentorship));
+
+            return back()->with('success', 'Mentorship request accepted.');
         } else {
             $mentorshipRequest->update([
                 'status' => 'rejected',
                 'message' => $request->message ?? 'Request declined',
             ]);
+
+            // 🔔 Notify mentee
+            $mentorshipRequest->mentee->notify(
+                new MentorshipStatusChangedNotification($mentorshipRequest, 'rejected')
+            );
+
+            // 🔔 Notify admins
+            $admins = User::role('admin')->get();
+            Notification::send($admins, new MentorshipStatusChangedNotification($mentorshipRequest, 'rejected'));
 
             return back()->with('success', 'Mentorship request declined.');
         }
@@ -181,15 +209,19 @@ class MentorshipController extends Controller
         $newStatus = $request->status;
 
         $mentorship->update([
-            'status' => $request->status,
-            'end_date' => in_array($request->status, ['completed', 'cancelled']) ? now() : null,
+            'status' => $newStatus,
+            'end_date' => in_array($newStatus, ['completed', 'cancelled']) ? now() : null,
             'notes' => $request->notes,
         ]);
 
-        // Notify both parties if status changed to completed or cancelled
-        if (in_array($newStatus, ['completed', 'cancelled']) && $oldStatus !== $newStatus) {
+        if ($oldStatus !== $newStatus) {
+            // 🔔 Notify mentor + mentee
             $mentorship->mentor->notify(new MentorshipStatusChangedNotification($mentorship, $newStatus));
             $mentorship->mentee->notify(new MentorshipStatusChangedNotification($mentorship, $newStatus));
+
+            // 🔔 Notify admins
+            $admins = User::role('admin')->get();
+            Notification::send($admins, new MentorshipStatusChangedNotification($mentorship, $newStatus));
         }
 
         return back()->with('success', 'Mentorship updated successfully');
