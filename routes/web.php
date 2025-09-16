@@ -171,6 +171,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::get('/user-management', [AdminController::class, 'userManagement'])->name('user-management');
         Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
         Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
+        Route::get('/user/{user}', [AdminController::class, 'showUser'])->name('user.show');
         Route::get('/user/{user}/edit', [AdminController::class, 'editUser'])->name('user.edit');
         Route::put('/user/{user}/update', [AdminController::class, 'updateUser'])->name('user.update');
         Route::delete('/user/{user}/delete', [AdminController::class, 'deleteUser'])->name('user.delete');
