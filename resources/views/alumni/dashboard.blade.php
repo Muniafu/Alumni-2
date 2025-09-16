@@ -42,7 +42,7 @@
                         </div>
                         <div class="col-md-6">
                             <small class="text-muted">Company</small>
-                            <p class="fw-medium">{{ $profile->current_company ?? 'Not provided' }}</p>
+                            <p class="fw-medium">{{ $profile->company ?? 'Not provided' }}</p>
                         </div>
                         <div class="col-md-6">
                             <small class="text-muted">Email</small>
@@ -152,7 +152,7 @@
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body">
                                 <h6 class="fw-semibold">{{ $event->title }}</h6>
-                                <p class="small text-muted">{{ $event->start_date->format('M j, Y g:i A') }}</p>
+                                <p class="small text-muted">{{ $event->start->format('M j, Y g:i A') }}</p>
                                 <p class="small text-muted">{{ Str::limit($event->description, 100) }}</p>
                                 <div class="d-flex justify-content-between align-items-center mt-2">
                                     <span class="badge {{ $event->is_registered ? 'bg-success' : 'bg-secondary' }}">

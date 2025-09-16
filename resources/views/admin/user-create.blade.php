@@ -70,7 +70,7 @@
                     </div>
 
                     {{-- Student/Alumni Information --}}
-                    <div class="col-md-6" id="studentFields">
+                    <div class="col-md-6" id="studentFields" style="display:none;">
                         <h5 class="fw-bold text-success mb-3">
                             <i class="bi bi-mortarboard-fill me-2"></i> Student/Alumni Information
                         </h5>
@@ -101,9 +101,41 @@
                         {{-- Program --}}
                         <div class="mb-3">
                             <label for="program" class="form-label fw-semibold">Program</label>
-                            <input id="program" type="text" name="program" value="{{ old('program') }}"
-                                   class="form-control @error('program') is-invalid @enderror">
+                            <select id="program" name="program" class="form-select @error('program') is-invalid @enderror">
+                                <option value="">Select Program</option>
+                                @foreach($programs as $program)
+                                    <option value="{{ $program }}" {{ old('program') == $program ? 'selected' : '' }}>
+                                        {{ $program }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('program') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Admin Information --}}
+                    <div class="col-md-6" id="adminFields" style="display:none;">
+                        <h5 class="fw-bold text-danger mb-3">
+                            <i class="bi bi-shield-lock-fill me-2"></i> Admin Information
+                        </h5>
+
+                        {{-- Department --}}
+                        <div class="mb-3">
+                            <label for="department" class="form-label fw-semibold">Department</label>
+                            <input id="department" type="text" name="department" value="{{ old('department') }}"
+                                   class="form-control @error('department') is-invalid @enderror">
+                            @error('department') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        {{-- Permissions --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Special Permissions</label>
+                            <select name="permissions[]" multiple class="form-select">
+                                <option value="manage_users">Manage Users</option>
+                                <option value="manage_events">Manage Events</option>
+                                <option value="manage_jobs">Manage Jobs</option>
+                                <option value="manage_forum">Manage Forum</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -125,18 +157,23 @@
 
 @push('scripts')
 <script>
-    // Show/hide student fields based on role selection
-    document.getElementById('role').addEventListener('change', function() {
+    function toggleRoleFields() {
+        const role = document.getElementById('role').value;
         const studentFields = document.getElementById('studentFields');
-        if (this.value === 'student' || this.value === 'alumni') {
+        const adminFields = document.getElementById('adminFields');
+
+        if (role === 'student' || role === 'alumni') {
             studentFields.style.display = 'block';
-            studentFields.querySelectorAll('input, select').forEach(el => el.required = true);
+            adminFields.style.display = 'none';
+        } else if (role === 'admin') {
+            adminFields.style.display = 'block';
+            studentFields.style.display = 'none';
         } else {
             studentFields.style.display = 'none';
-            studentFields.querySelectorAll('input, select').forEach(el => el.required = false);
+            adminFields.style.display = 'none';
         }
-    });
-    // Trigger on page load
-    document.getElementById('role').dispatchEvent(new Event('change'));
+    }
+    document.getElementById('role').addEventListener('change', toggleRoleFields);
+    toggleRoleFields(); // run on page load
 </script>
 @endpush

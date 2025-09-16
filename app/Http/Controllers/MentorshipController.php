@@ -35,7 +35,7 @@ class MentorshipController extends Controller
      */
     public function create()
     {
-        //
+        return view('mentorship.create');
     }
 
     /**
@@ -43,7 +43,21 @@ class MentorshipController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'expertise' => 'required|string|max:255',
+            'bio' => 'required|string|max:1000',
+        ]);
+
+        Mentorship::create([
+            'mentor_id' => Auth::id(),
+            'expertise' => $request->expertise,
+            'bio' => $request->bio,
+            'status' => 'active',
+            'start_date' => now(),
+        ]);
+
+        return redirect()->route('alumni.dashboard')
+            ->with('success', 'You have successfully signed up as a mentor!');
     }
 
     /**

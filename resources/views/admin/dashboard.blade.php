@@ -126,6 +126,32 @@
                     </div>
                 </a>
             </div>
+
+            <!-- NEW Shortcuts -->
+            <div class="col-md-4">
+                <a href="{{ route('events.index') }}" class="card shadow-sm border-0 text-decoration-none h-100">
+                    <div class="card-body">
+                        <h6 class="fw-semibold text-dark">Manage Events</h6>
+                        <p class="small text-muted">Create and oversee alumni events</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('jobs.index') }}" class="card shadow-sm border-0 text-decoration-none h-100">
+                    <div class="card-body">
+                        <h6 class="fw-semibold text-dark">Manage Jobs</h6>
+                        <p class="small text-muted">Post and review job opportunities</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('forum.index') }}" class="card shadow-sm border-0 text-decoration-none h-100">
+                    <div class="card-body">
+                        <h6 class="fw-semibold text-dark">Forum Moderation</h6>
+                        <p class="small text-muted">Moderate discussions and posts</p>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -136,7 +162,9 @@
             @forelse($recentActivities as $activity)
                 <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
                     <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        @if(isset($activity->organizer))
+                        @if(isset($activity->name))
+                            {{ substr($activity->name, 0, 1) }}
+                        @elseif(isset($activity->organizer))
                             {{ substr($activity->organizer->name, 0, 1) }}
                         @elseif(isset($activity->author))
                             {{ substr($activity->author->name, 0, 1) }}
@@ -152,6 +180,14 @@
                                 New Job Posting: {{ $activity->title }}
                             @elseif($activity instanceof \App\Models\ForumThread)
                                 New Forum Thread: {{ $activity->title }}
+                            @elseif($activity instanceof \App\Models\User)
+                                New User Registration: {{ $activity->name }}
+                            @elseif(isset($activity->action) && $activity->action === 'approved')
+                                User Approved: {{ $activity->user->name }}
+                            @elseif(isset($activity->action) && $activity->action === 'rejected')
+                                User Rejected: {{ $activity->user->name }}
+                            @elseif(isset($activity->action) && $activity->action === 'profile_updated')
+                                Profile Updated: {{ $activity->user->name }}
                             @endif
                         </p>
                         <p class="small text-muted mb-0">
@@ -161,12 +197,24 @@
                                 Posted by {{ $activity->poster->name }}
                             @elseif($activity instanceof \App\Models\ForumThread)
                                 Started by {{ $activity->author->name }}
+                            @elseif($activity instanceof \App\Models\User)
+                                Registered on {{ $activity->created_at->format('M d, Y') }}
+                            @elseif(isset($activity->action))
+                                By Admin: {{ $activity->admin->name ?? 'System' }}
                             @endif
                         </p>
                     </div>
                     <div class="text-end">
                         <p class="small text-muted mb-1">{{ $activity->created_at->diffForHumans() }}</p>
-                        <a href="@if($activity instanceof \App\Models\Event){{ route('events.show', $activity) }}@elseif($activity instanceof \App\Models\JobPosting){{ route('jobs.show', $activity) }}@elseif($activity instanceof \App\Models\ForumThread){{ route('forum.threads.show', $activity) }}@endif" class="small text-primary text-decoration-none">View</a>
+                        @if($activity instanceof \App\Models\Event)
+                            <a href="{{ route('events.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
+                        @elseif($activity instanceof \App\Models\JobPosting)
+                            <a href="{{ route('jobs.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
+                        @elseif($activity instanceof \App\Models\ForumThread)
+                            <a href="{{ route('forum.threads.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
+                        @elseif($activity instanceof \App\Models\User)
+                            <a href="{{ route('admin.user-show', $activity) }}" class="small text-primary text-decoration-none">View</a>
+                        @endif
                     </div>
                 </div>
             @empty

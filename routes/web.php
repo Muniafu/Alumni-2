@@ -129,6 +129,18 @@ Route::middleware(['auth', 'approved'])->group(function () {
 
     /*
     |-----------------------------
+    | Mentorship – Mentor Signup
+    | (restricted to alumni with
+    |  "mentor students" permission)
+    |-----------------------------
+    */
+    Route::middleware(['auth', 'role:alumni', 'can:mentor students'])->group(function () {
+        Route::get('/mentorship/create', [MentorshipController::class, 'create'])->name('mentorship.create');
+        Route::post('/mentorship', [MentorshipController::class, 'store'])->name('mentorship.store');
+    });
+
+    /*
+    |-----------------------------
     | Mentorship
     |-----------------------------
     */
@@ -171,6 +183,11 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::get('/user-management', [AdminController::class, 'userManagement'])->name('user-management');
         Route::get('/user/create', [AdminController::class, 'createUser'])->name('user.create');
         Route::post('/user/store', [AdminController::class, 'storeUser'])->name('user.store');
+        Route::post('/approve-user/{user}', [AdminController::class, 'approveUser'])->name('approve-user');
+        Route::post('/reject-user/{user}', [AdminController::class, 'rejectUser'])->name('reject-user');
+        Route::post('/bulk-approval', [AdminController::class, 'bulkApproval'])->name('users.bulk-approval');
+        Route::post('/users/bulk-action', [AdminController::class, 'bulkAction'])->name('users.bulk-action');
+        Route::post('/user/{id}/restore', [AdminController::class, 'restoreUser'])->name('user.restore');
         Route::get('/user/{user}', [AdminController::class, 'showUser'])->name('user.show');
         Route::get('/user/{user}/edit', [AdminController::class, 'editUser'])->name('user.edit');
         Route::put('/user/{user}/update', [AdminController::class, 'updateUser'])->name('user.update');

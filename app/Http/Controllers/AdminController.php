@@ -187,8 +187,9 @@ class AdminController extends Controller
         Gate::authorize('manage-users');
 
         $users = User::with('roles')->approved()->get();
+        $roles = Role::all(); // Fetches roles for the dropdown
 
-        return view('admin.user-management', compact('users'));
+        return view('admin.user-management', compact('users', 'roles'));
     }
 
 
@@ -197,53 +198,112 @@ class AdminController extends Controller
         Gate::authorize('manage-users');
 
         $roles = Role::all();
-        $currentYear = date('Y');
-        $graduationYears = range($currentYear - 10, $currentYear + 5);
+        $graduationYears = range(1980, now()->year + 5);
 
-        return view('admin.user-create', compact('roles', 'graduationYears'));
+        $programs = [
+            'Computer Science',
+            'Information Systems',
+            'Business Administration',
+            'Engineering',
+            'Education',
+        ];
+
+        return view('admin.user-create', compact('roles', 'graduationYears', 'programs'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $action = $request->input('action');
+        $userIds = $request->input('selected_users', []);
+
+        if (empty($userIds)) {
+            return back()->with('error', 'No users selected.');
+        }
+
+        if ($action === 'delete') {
+            User::whereIn('id', $userIds)->delete();
+            return back()->with('success', 'Selected users deleted successfully.');
+        }
+
+        if ($action === 'restore') {
+            User::withTrashed()->whereIn('id', $userIds)->restore();
+            return back()->with('success', 'Selected users restored successfully.');
+        }
+
+        return back()->with('error', 'Invalid bulk action selected.');
+    }
+
+    public function bulkApproval(Request $request)
+    {
+        $action = $request->input('action');
+        $userIds = $request->input('selected_users', []);
+
+        if (empty($userIds)) {
+            return back()->with('error', 'No users selected.');
+        }
+
+        if ($action === 'approve') {
+            User::whereIn('id', $userIds)->update([
+                'is_approved' => true,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+            ]);
+
+            foreach (User::whereIn('id', $userIds)->get() as $user) {
+                $user->notify(new UserApprovedNotification());
+            }
+
+            return back()->with('success', 'Selected users approved successfully.');
+        }
+
+        if ($action === 'reject') {
+            $users = User::whereIn('id', $userIds)->get();
+
+            foreach ($users as $user) {
+                $user->notify(new UserRejectedNotification());
+                $user->delete();
+            }
+
+            return back()->with('success', 'Selected users rejected successfully.');
+        }
+
+        return back()->with('error', 'Invalid bulk action.');
     }
 
     public function storeUser(Request $request)
     {
         Gate::authorize('manage-users');
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'exists:roles,name'],
-            'student_id' => ['required_if:role,student,alumni', 'string', 'max:50', 'unique:users'],
-            'graduation_year' => ['required_if:role,student,alumni', 'digits:4', 'integer', 'min:1900', 'max:' . (date('Y') + 5)],
-            'program' => ['required_if:role,student,alumni', 'string', 'max:255'],
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'email'      => 'required|string|email|max:255|unique:users',
+            'password'   => 'required|string|min:8|confirmed',
+            'role'       => 'required|exists:roles,name',
+            'program'    => 'nullable|string|max:255',
+            'graduation_year' => 'nullable|integer',
+            'department' => 'nullable|string|max:255',
+            'permissions' => 'array',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'student_id' => $request->student_id,
-            'graduation_year' => $request->graduation_year,
-            'program' => $request->program,
-            'is_approved' => true,
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
+            'name'       => $validated['name'],
+            'email'      => $validated['email'],
+            'password'   => Hash::make($validated['password']),
+            'program'    => $validated['program'] ?? null,
+            'graduation_year' => $validated['graduation_year'] ?? null,
+            'department' => $validated['role'] === 'admin' ? $validated['department'] : null,
         ]);
 
-        $user->assignRole($request->role);
+        // Assign role
+        $role = Role::where('name', $validated['role'])->first();
+        $user->roles()->attach($role);
 
-        // Create empty profile
-        $user->profile()->create([]);
+        // Assign permissions (if using spatie/laravel-permission or pivot table)
+        if ($validated['role'] === 'admin' && !empty($validated['permissions'])) {
+            $user->syncPermissions($validated['permissions']);
+        }
 
-        ActivityLog::create([
-            'user_id' => auth()->id(),
-            'action' => 'create',
-            'description' => 'Created new user: ' . $user->name . ' with role ' . $request->role,
-            'model_type' => User::class,
-            'model_id' => $user->id,
-        ]);
-
-        return redirect()->route('admin.user-management')
-            ->with('success', 'User created successfully');
+        return redirect()->route('admin.user-management')->with('success', 'User created successfully.');
     }
 
     public function editUser(User $user)
@@ -251,46 +311,58 @@ class AdminController extends Controller
         Gate::authorize('manage-users');
 
         $roles = Role::all();
-        $currentYear = date('Y');
-        $graduationYears = range($currentYear - 10, $currentYear + 5);
+        $graduationYears = range(1980, now()->year + 5);
 
-        return view('admin.user-edit', compact('user', 'roles', 'graduationYears'));
+        $programs = [
+            'Computer Science',
+            'Information Systems',
+            'Business Administration',
+            'Engineering',
+            'Education',
+        ];
+
+        return view('admin.user-edit', compact('user', 'roles', 'graduationYears', 'programs'));
     }
 
     public function updateUser(Request $request, User $user)
     {
         Gate::authorize('manage-users');
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
-            'role' => ['required', 'exists:roles,name'],
-            'student_id' => ['required_if:role,student,alumni', 'string', 'max:50', 'unique:users,student_id,'.$user->id],
-            'graduation_year' => ['required_if:role,student,alumni', 'digits:4', 'integer', 'min:1900', 'max:' . (date('Y') + 5)],
-            'program' => ['required_if:role,student,alumni', 'string', 'max:255'],
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'email'      => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password'   => 'nullable|string|min:8|confirmed',
+            'role'       => 'required|exists:roles,name',
+            'program'    => 'nullable|string|max:255',
+            'graduation_year' => 'nullable|integer',
+            'department' => 'nullable|string|max:255',
+            'permissions' => 'array',
         ]);
 
         $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'student_id' => $request->student_id,
-            'graduation_year' => $request->graduation_year,
-            'program' => $request->program,
+            'name'       => $validated['name'],
+            'email'      => $validated['email'],
+            'program'    => $validated['program'] ?? null,
+            'graduation_year' => $validated['graduation_year'] ?? null,
+            'department' => $validated['role'] === 'admin' ? $validated['department'] : null,
         ]);
 
-        // Sync roles (remove all and add the new one)
-        $user->syncRoles([$request->role]);
+        if (!empty($validated['password'])) {
+            $user->update(['password' => Hash::make($validated['password'])]);
+        }
 
-        ActivityLog::create([
-            'user_id' => auth()->id(),
-            'action' => 'update',
-            'description' => 'Updated user: ' . $user->name,
-            'model_type' => User::class,
-            'model_id' => $user->id,
-        ]);
+        // Sync role
+        $role = Role::where('name', $validated['role'])->first();
+        $user->roles()->sync([$role->id]);
 
-        return redirect()->route('admin.user-management')
-            ->with('success', 'User updated successfully');
+        // Sync permissions (only for admins)
+        if ($validated['role'] === 'admin') {
+            $user->syncPermissions($validated['permissions'] ?? []);
+        } else {
+            $user->syncPermissions([]); // clear permissions if not admin
+        }
+
+        return redirect()->route('admin.user-management')->with('success', 'User updated successfully.');
     }
 
     public function deleteUser(User $user)
@@ -317,6 +389,14 @@ class AdminController extends Controller
             ->with('success', 'User deleted successfully');
     }
 
+    public function restoreUser($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        $user->restore();
+
+        return back()->with('success', 'User restored successfully.');
+    }
+
     public function permissions()
     {
         Gate::authorize('manage-permissions');
@@ -340,7 +420,7 @@ class AdminController extends Controller
     {
         Gate::authorize('manage-permissions');
 
-        $request->validate([
+        $validate = $request->validate([
             'role_id' => 'required|exists:roles,id',
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id'

@@ -20,25 +20,31 @@
                     </label>
                     <select name="role_id" id="role_id"
                             class="form-select @error('role_id') is-invalid @enderror" required>
-                        <option value="">Select a Role</option>
+                        <option value="">-- Select a Role --</option>
                         @foreach($roles as $role)
                             <option value="{{ $role->id }}">{{ ucfirst($role->name) }}</option>
                         @endforeach
                     </select>
-                    @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('role_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 {{-- Permissions Grid --}}
+                <h5 class="fw-semibold text-dark mb-3">
+                    <i class="bi bi-key text-success me-2"></i> Assign Permissions
+                </h5>
                 <div class="row g-3">
                     @forelse($permissions as $permission)
                         <div class="col-md-4">
-                            <div class="form-check">
+                            <div class="form-check border p-2 rounded-2 shadow-sm h-100">
                                 <input id="permission-{{ $permission->id }}"
                                        name="permissions[]"
                                        type="checkbox"
                                        value="{{ $permission->id }}"
                                        class="form-check-input">
-                                <label for="permission-{{ $permission->id }}" class="form-check-label text-muted">
+                                <label for="permission-{{ $permission->id }}"
+                                       class="form-check-label fw-medium text-muted">
                                     {{ ucfirst($permission->name) }}
                                 </label>
                             </div>
@@ -64,6 +70,7 @@
 
 @push('scripts')
 <script>
+    // Fetch assigned permissions when role is selected
     document.getElementById('role_id').addEventListener('change', function() {
         const roleId = this.value;
         if (!roleId) return;
@@ -72,15 +79,17 @@
             .then(response => response.json())
             .then(data => {
                 // Reset all checkboxes
-                document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.querySelectorAll('input[name="permissions[]"]').forEach(cb => cb.checked = false);
 
                 // Check permissions assigned to role
-                data.permissions.forEach(permissionId => {
-                    const checkbox = document.getElementById(`permission-${permissionId}`);
-                    if (checkbox) checkbox.checked = true;
-                });
+                if (data.permissions && Array.isArray(data.permissions)) {
+                    data.permissions.forEach(permissionId => {
+                        const checkbox = document.getElementById(`permission-${permissionId}`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
             })
-            .catch(() => alert('Failed to fetch role permissions. Please try again.'));
+            .catch(() => alert('⚠️ Failed to fetch role permissions. Please try again.'));
     });
 </script>
 @endpush
