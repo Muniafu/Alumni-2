@@ -146,7 +146,7 @@
                                                 <strong>{{ Str::limit($post->content, 50) }}</strong>
                                                 <small class="text-muted">in {{ $post->thread->title ?? 'Unknown Thread' }}</small>
                                             </span>
-                                            <a href="{{ route('forum.thread', $post->thread) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="{{ route('forum.thread.show', $post->thread) }}" class="btn btn-sm btn-outline-primary">View</a>
                                         </li>
                                     @empty
                                         <p class="text-muted mb-0">No forum posts yet.</p>

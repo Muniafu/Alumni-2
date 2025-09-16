@@ -213,7 +213,7 @@
                         @elseif($activity instanceof \App\Models\ForumThread)
                             <a href="{{ route('forum.threads.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
                         @elseif($activity instanceof \App\Models\User)
-                            <a href="{{ route('admin.user-show', $activity) }}" class="small text-primary text-decoration-none">View</a>
+                            <a href="{{ route('admin.user.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
                         @endif
                     </div>
                 </div>
