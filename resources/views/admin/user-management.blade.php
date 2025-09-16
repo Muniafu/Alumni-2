@@ -79,14 +79,22 @@
                                 {{-- Actions --}}
                                 <td>
                                     <div class="d-flex">
-                                        <a href="{{ route('admin.user.edit', $user) }}" class="btn btn-sm btn-outline-primary me-2">
-                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        {{-- View --}}
+                                        <a href="{{ route('admin.user.show', $user) }}" class="btn btn-sm btn-outline-info me-2">
+                                            <i class="bi bi-eye me-1"></i> View
                                         </a>
+
+                                        {{-- Edit --}}
+                                        <a href="{{ route('admin.user.edit', $user) }}" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="bi bi-pencil-square me-1"></i> Edit
+                                        </a>
+
+                                        {{-- Delete --}}
                                         <form action="{{ route('admin.user.delete', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-trash me-1"></i>Delete
+                                                <i class="bi bi-trash me-1"></i> Delete
                                             </button>
                                         </form>
                                     </div>

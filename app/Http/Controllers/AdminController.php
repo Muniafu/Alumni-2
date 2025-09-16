@@ -24,6 +24,10 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth', 'can:access-admin-dashboard']);
+    }
 
     public function dashboard()
     {
@@ -113,6 +117,11 @@ class AdminController extends Controller
             'eventAttendance',
             'recentActivities'
         ));
+    }
+
+    public function showUser(User $user)
+    {
+        return view('admin.user-show', compact('user'));
     }
 
     public function pendingApprovals()
