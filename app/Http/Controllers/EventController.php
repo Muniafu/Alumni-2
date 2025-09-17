@@ -7,31 +7,25 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\EventRsvp;
 use Illuminate\Support\Facades\Gate;
-use App\Notifications\EventCreatedNotification;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\EventRsvpNotification;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\EventCreatedNotification;
+use App\Notifications\EventRsvpNotification;
 
 class EventController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-
+        // Eager load organizer and attendee counts to avoid N+1
         $events = Event::with('organizer')
+            ->withCount(['attendees as attendees_going_count' => fn($q) => $q->wherePivot('status', 'going')])
             ->upcoming()
             ->orderBy('start')
             ->paginate(10);
 
         return view('events.index', compact('events'));
-
     }
 
-    /**
-     * Show the form for viewing the calender for an event.
-     */
     public function calendar()
     {
         return view('events.calendar');
@@ -39,45 +33,33 @@ class EventController extends Controller
 
     public function getCalendarEvents(Request $request)
     {
-
         $start = $request->start;
         $end = $request->end;
 
         $events = Event::whereBetween('start', [$start, $end])
             ->orWhereBetween('end', [$start, $end])
             ->get()
-            ->map(function ($event) {
-                return [
-                    'id' => $event->id,
-                    'title' => $event->title,
-                    'start' => $event->start->toIso8601String(),
-                    'end' => $event->end->toIso8601String(),
-                    'location' => $event->location,
-                    'url' => route('events.show', $event->id),
-                    'color' => $event->is_online ? '#3b82f6' : '#10b981',
-                ];
-            });
+            ->map(fn($event) => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'start' => $event->start->toIso8601String(),
+                'end' => $event->end->toIso8601String(),
+                'location' => $event->location,
+                'url' => route('events.show', $event->id),
+                'color' => $event->is_online ? '#3b82f6' : '#10b981',
+            ]);
 
         return response()->json($events);
-
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         Gate::authorize('create', Event::class);
-
         return view('events.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-
         Gate::authorize('create', Event::class);
 
         $validated = $request->validate([
@@ -97,52 +79,37 @@ class EventController extends Controller
         }
 
         $validated['user_id'] = auth()->id();
-
         $event = Event::create($validated);
 
-        // 🔔 Notify all approved students (and optionally alumni)
+        // Notify approved students/alumni
         $recipients = User::query()
-            ->where('id', '!=', auth()->id())          // exclude creator
-            ->where('is_approved', true)               // only approved users
-            ->whereHas('roles', function ($q) {
-                $q->whereIn('name', ['student', 'alumni']);
-            })
+            ->where('id', '!=', auth()->id())
+            ->where('is_approved', true)
+            ->whereHas('roles', fn($q) => $q->whereIn('name', ['student','alumni']))
             ->get();
 
         Notification::send($recipients, new EventCreatedNotification($event));
 
         return redirect()->route('events.show', $event)
-            ->with('success', 'Event created successfully');
+                         ->with('success', 'Event created successfully');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Event $event)
     {
-
         $userRsvp = $event->rsvps()->where('user_id', auth()->id())->first();
         $attendees = $event->rsvps()->with('user')->where('status', 'going')->get();
 
         return view('events.show', compact('event', 'userRsvp', 'attendees'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Event $event)
     {
         Gate::authorize('update', $event);
-
         return view('events.edit', compact('event'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Event $event)
     {
-
         Gate::authorize('update', $event);
 
         $validated = $request->validate([
@@ -158,56 +125,48 @@ class EventController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($event->image) {
-                Storage::disk('public')->delete($event->image);
-            }
+            if ($event->image) Storage::disk('public')->delete($event->image);
             $validated['image'] = $request->file('image')->store('events', 'public');
         }
 
         $event->update($validated);
 
         return redirect()->route('events.show', $event)
-            ->with('success', 'Event updated successfully');
-
+                         ->with('success', 'Event updated successfully');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Event $event)
     {
-
         Gate::authorize('delete', $event);
-
-        if ($event->image) {
-            Storage::disk('public')->delete($event->image);
-        }
-
+        if ($event->image) Storage::disk('public')->delete($event->image);
         $event->delete();
 
         return redirect()->route('events.index')
-            ->with('success', 'Event deleted successfully');
-
+                         ->with('success', 'Event deleted successfully');
     }
 
-    /**
-     * RSVP to an event.
-     */
+    /** RSVP Handling **/
     public function rsvp(Request $request, Event $event)
     {
         $this->authorize('rsvp', Event::class);
+
         $validated = $request->validate([
             'status' => 'required|in:going,interested,not_going',
             'guests' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:500',
         ]);
 
+        // Enforce capacity
+        if ($validated['status'] === 'going' && $event->isFull()) {
+            return back()->withErrors(['status' => 'This event is full. You cannot RSVP as "Going".']);
+        }
+
         $rsvp = $event->rsvps()->updateOrCreate(
             ['user_id' => auth()->id()],
             $validated
         );
 
-        // Notify event organizer about RSVP
+        // Notify organizer if not self
         if ($event->organizer && $event->organizer->id != auth()->id()) {
             $event->organizer->notify(new EventRsvpNotification($rsvp));
         }
@@ -215,14 +174,9 @@ class EventController extends Controller
         return back()->with('success', 'RSVP status updated');
     }
 
-    /**
-     * Cancel RSVP for an event.
-     */
     public function cancelRsvp(Event $event)
     {
         $event->rsvps()->where('user_id', auth()->id())->delete();
-
         return back()->with('success', 'RSVP cancelled');
     }
-
 }

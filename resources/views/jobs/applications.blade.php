@@ -63,7 +63,7 @@
 
                                     <!-- Actions -->
                                     <td>
-                                        <a href="{{ route('jobs.applications.show', [$job, $application]) }}" class="btn btn-sm btn-outline-primary me-2">
+                                        <a href="{{ route('jobs.application.show', [$job, $application]) }}" class="btn btn-sm btn-outline-primary me-2">
                                             <i class="fa-solid fa-eye me-1"></i> View
                                         </a>
                                         <a href="{{ Storage::disk('public')->url($application->resume_path) }}" target="_blank" class="btn btn-sm btn-outline-secondary">

@@ -13,6 +13,17 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
+     * Display the logged-in user's profile (read-only view).
+     */
+    public function show(Request $request): View
+    {
+        $user = $request->user();
+        $profile = $user->profile;
+
+        return view('profile.show', compact('user', 'profile'));
+    }
+
+    /**
      * Display the user's profile form.
      */
     public function edit(Request $request): View

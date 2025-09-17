@@ -5,23 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Notifications\EventCreatedNotification;
 
 class Event extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'title',
-        'description',
-        'start',
-        'end',
-        'location',
-        'image',
-        'capacity',
-        'is_online',
-        'meeting_url',
-        'user_id',
+        'title', 'description', 'start', 'end',
+        'location', 'image', 'capacity', 'is_online',
+        'meeting_url', 'user_id',
     ];
 
     protected $casts = [
@@ -30,6 +22,7 @@ class Event extends Model
         'is_online' => 'boolean',
     ];
 
+    /** Relationships **/
     public function organizer()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -47,6 +40,7 @@ class Event extends Model
             ->withTimestamps();
     }
 
+    /** Accessors **/
     public function getAttendeesGoingAttribute()
     {
         return $this->attendees()->wherePivot('status', 'going')->count();
@@ -60,25 +54,36 @@ class Event extends Model
     public function getAvailableSpotsAttribute()
     {
         return $this->capacity ? max(0, $this->capacity - $this->attendees_going) : null;
-
     }
 
-    public function isFull()
+    /** Helpers **/
+    public function isFull(): bool
     {
         return $this->capacity && ($this->attendees_going >= $this->capacity);
     }
 
-    public function hasUserRsvped(User $user)
+    public function hasUserRsvped(User $user): bool
     {
         return $this->rsvps()->where('user_id', $user->id)->exists();
     }
 
-    public function getUserRsvpStatus(User $user)
+    public function getUserRsvpStatus(User $user): ?string
     {
         $rsvp = $this->rsvps()->where('user_id', $user->id)->first();
         return $rsvp ? $rsvp->status : null;
     }
 
+    public function isPast(): bool
+    {
+        return $this->end->lt(now());
+    }
+
+    public function isOngoing(): bool
+    {
+        return $this->start->lte(now()) && $this->end->gte(now());
+    }
+
+    /** Scopes **/
     public function scopeUpcoming($query)
     {
         return $query->where('start', '>', now());
@@ -92,12 +97,6 @@ class Event extends Model
     public function scopeCurrent($query)
     {
         return $query->where('start', '<=', now())
-            ->where('end', '>=', now());
+                     ->where('end', '>=', now());
     }
-
-    protected static function booted()
-    {
-       //
-    }
-
 }

@@ -37,64 +37,88 @@ class Profile extends Model
         'profile_completion' => 0,
     ];
 
+    /**
+     * Relationship to the user
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Calculate profile completion percentage
+     */
     public function calculateCompletion(): int
     {
-        $totalFields = 10;
         $completedFields = 0;
 
-        // User fields
+        // Fields to check
         $userFields = ['name', 'email'];
+        $profileFields = ['phone', 'address', 'current_job', 'company', 'bio'];
+        $arrayFields = ['skills', 'interests', 'social_links'];
+
+        // Count completed user fields
         foreach ($userFields as $field) {
             if (!empty($this->user->$field)) {
                 $completedFields++;
             }
         }
 
-        // Profile fields
-        $profileFields = [
-            'phone', 'address', 'current_job',
-            'company', 'bio'
-        ];
-
+        // Count completed profile fields
         foreach ($profileFields as $field) {
             if (!empty($this->$field)) {
                 $completedFields++;
             }
         }
 
-        // Array fields
-        $arrayFields = [
-            'skills' => 1, // Need at least 1 skill
-            'interests' => 1, // Need at least 1 interest
-            'social_links' => 1 // Need at least 1 social link
-        ];
-
-        foreach ($arrayFields as $field => $minCount) {
-            if (!empty($this->$field) && count($this->$field) >= $minCount) {
+        // Count array fields (at least 1 item)
+        foreach ($arrayFields as $field) {
+            if (!empty($this->$field) && count($this->$field) >= 1) {
                 $completedFields++;
             }
         }
 
+        // Dynamic total fields
+        $totalFields = count($userFields) + count($profileFields) + count($arrayFields);
+
         // Calculate percentage
         $completionPercentage = min(100, round(($completedFields / $totalFields) * 100));
 
+        // Update model
         $this->profile_completion = $completionPercentage;
         $this->save();
 
-        if ($completionPercentage === 100) {
+        // Send notification if fully completed (once)
+        if ($completionPercentage === 100 && !$this->user->notifications()
+            ->where('type', ProfileCompletedNotification::class)
+            ->exists()) {
             $this->user->notify(new ProfileCompletedNotification());
         }
 
         return $completionPercentage;
     }
 
-    public function getSocialLink($platform)
+    /**
+     * Get a specific social link
+     */
+    public function getSocialLink(string $platform): ?string
     {
         return $this->social_links[$platform] ?? null;
+    }
+
+    /**
+     * Accessor: comma-separated skills
+     */
+    public function getSkillsListAttribute(): string
+    {
+        return implode(', ', $this->skills);
+    }
+
+    /**
+     * Accessor: comma-separated interests
+     */
+    public function getInterestsListAttribute(): string
+    {
+        return implode(', ', $this->interests);
     }
 }
