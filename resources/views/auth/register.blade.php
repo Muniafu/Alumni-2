@@ -17,13 +17,13 @@
     <style>
         body {
             font-family: 'Figtree', sans-serif;
-            background: linear-gradient(to bottom right, #e6f0ff, #e6ffe6); /* Calm and inviting */
+            background: linear-gradient(to bottom right, #e6f0ff, #e6ffe6);
         }
         .card-glass {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(12px);
             border-radius: 1rem;
-            border-top: 0.3rem solid #198754; /* Brand green for registration */
+            border-top: 0.3rem solid #198754;
             box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.3s;
         }
@@ -41,9 +41,6 @@
         }
         .header-title {
             color: #198754;
-        }
-        a {
-            text-decoration: none;
         }
     </style>
 </head>
@@ -79,14 +76,6 @@
                     <input type="email" name="email" id="email" class="form-control rounded-pill shadow-sm"
                            value="{{ old('email') }}" required autocomplete="username">
                     <x-input-error :messages="$errors->get('email')" class="text-danger mt-1" />
-                </div>
-
-                <!-- Student ID -->
-                <div class="mb-3">
-                    <label for="student_id" class="form-label fw-semibold">Student ID</label>
-                    <input type="text" name="student_id" id="student_id" class="form-control rounded-pill shadow-sm"
-                           value="{{ old('student_id') }}" required>
-                    <x-input-error :messages="$errors->get('student_id')" class="text-danger mt-1" />
                 </div>
 
                 <!-- Graduation Year -->

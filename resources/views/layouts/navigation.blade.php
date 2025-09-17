@@ -68,28 +68,35 @@
                     <li class="nav-item dropdown me-3">
                         <a class="nav-link position-relative" href="#" id="navbarNotifications" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                             <i class="fas fa-bell fa-lg text-secondary"></i>
-                            @if(auth()->user()->unreadNotifications->count() > 0)
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                    {{ auth()->user()->unreadNotifications->count() }}
+                            @php $unreadCount = auth()->user()->unreadNotifications->count(); @endphp
+                            @if($unreadCount > 0)
+                                <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ $unreadCount }}
                                     <span class="visually-hidden">unread notifications</span>
                                 </span>
                             @endif
                         </a>
+
                         <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="navbarNotifications" style="min-width:300px;">
                             <li class="dropdown-header fw-bold text-primary">Notifications</li>
-                            @forelse(auth()->user()->unreadNotifications->take(5) as $notification)
+
+                            @forelse(auth()->user()->notifications()->latest()->take(5)->get() as $notification)
                                 <li>
-                                    <a class="dropdown-item d-flex justify-content-between align-items-start" href="{{ $notification->data['url'] ?? '#' }}">
+                                    <a class="dropdown-item d-flex justify-content-between align-items-start
+                                        {{ is_null($notification->read_at) ? 'fw-bold bg-light mark-as-read' : '' }}"
+                                        href="{{ $notification->data['url'] ?? '#' }}"
+                                        data-id="{{ $notification->id }}">
                                         <div class="me-2">
-                                            <strong>{{ $notification->data['message'] }}</strong>
+                                            {{ $notification->data['message'] ?? 'Notification' }}
                                             <br>
                                             <small class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
                                         </div>
                                     </a>
                                 </li>
                             @empty
-                                <li class="dropdown-item text-center text-muted small">No new notifications</li>
+                                <li class="dropdown-item text-center text-muted small">No notifications</li>
                             @endforelse
+
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-center fw-semibold text-primary" href="{{ route('notifications.all') }}">
@@ -141,3 +148,42 @@
         </div>
     </div>
 </nav>
+<script>
+    @if(auth()->user()->hasRole('admin'))
+        Echo.private('App.Models.User.{{ auth()->user()->id }}')
+            .notification((notification) => {
+                console.log(notification);
+
+                // Update the notification dropdown
+                const dropdown = document.querySelector('#navbarNotifications .dropdown-menu');
+                if(dropdown){
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <a class="dropdown-item d-flex justify-content-between align-items-start fw-bold bg-light mark-as-read"
+                           href="${notification.url}">
+                            <div class="me-2">
+                                ${notification.message}
+                                <br>
+                                <small class="text-muted">Just now</small>
+                            </div>
+                        </a>
+                    `;
+                    dropdown.insertBefore(li, dropdown.querySelector('hr.dropdown-divider'));
+                }
+
+                // Update badge count
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    let count = parseInt(badge.innerText) || 0;
+                    badge.innerText = count + 1;
+                } else {
+                    const bell = document.querySelector('#navbarNotifications');
+                    const span = document.createElement('span');
+                    span.id = 'notificationBadge';
+                    span.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                    span.innerText = 1;
+                    bell.appendChild(span);
+                }
+            });
+    @endif
+</script>

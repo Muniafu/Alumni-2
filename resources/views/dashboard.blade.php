@@ -17,14 +17,14 @@
     <style>
         body {
             font-family: 'Figtree', sans-serif;
-            background: linear-gradient(to right, #f0f8ff, #e6f7e6); /* Calm, productive background */
+            background: linear-gradient(to right, #f0f8ff, #e6f7e6);
             color: #1a1a1a;
         }
         .card-glass {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(12px);
             border-radius: 1rem;
-            border-top: 0.3rem solid #0d6efd; /* Brand primary color */
+            border-top: 0.3rem solid #0d6efd;
             box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.3s;
         }
@@ -33,8 +33,16 @@
             box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
         }
         .header-title {
-            color: #0d6efd; /* Brand primary */
+            color: #0d6efd;
             font-weight: 600;
+        }
+        .student-id-badge {
+            background-color: #198754;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
         }
     </style>
 </head>
@@ -51,7 +59,14 @@
             <div class="col-md-8">
                 <div class="card card-glass p-4">
                     <div class="card-body text-center">
-                        <h5 class="card-title fw-bold mb-3">Welcome, {{ auth()->user()->name }}!</h5>
+                        <h5 class="card-title fw-bold mb-2">Welcome, {{ auth()->user()->name }}!</h5>
+
+                        <!-- Student ID -->
+                        <p class="mb-3">
+                            Your Student ID:
+                            <span class="student-id-badge">{{ auth()->user()->student_id }}</span>
+                        </p>
+
                         <p class="card-text lead text-secondary mb-4">You're successfully logged in to the Alumni System.</p>
 
                         <!-- Feature Quick Links -->

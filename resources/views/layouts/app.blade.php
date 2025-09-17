@@ -68,6 +68,41 @@
     <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll('.mark-as-read').forEach(function (el) {
+            el.addEventListener('click', function (e) {
+                let notificationId = this.dataset.id;
+
+                // Send AJAX request
+                fetch(`/notifications/mark-as-read/${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        // Decrease badge count
+                        let badge = document.getElementById('notificationBadge');
+                        if (badge) {
+                            let count = parseInt(badge.textContent.trim());
+                            if (count > 1) {
+                                badge.textContent = count - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        }
+
+                        // Mark visually as read
+                        this.classList.remove('fw-bold', 'bg-light');
+                    }
+                });
+            });
+        });
+    });
+    </script>
+
     @stack('scripts')
 </body>
 </html>
