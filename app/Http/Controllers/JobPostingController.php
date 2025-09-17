@@ -118,16 +118,15 @@ class JobPostingController extends Controller
                 throw new \Exception('Failed to save job posting');
             }
 
-            // 🔔 Notify only approved students + admins
-            $students = User::query()
+            // ✅ Send notifications here
+            $recipients = User::query()
                 ->where('is_approved', true)
-                ->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                ->whereHas('roles', function ($q) {
+                    $q->whereIn('name', ['alumni', 'student', 'admin']);
+                })
                 ->get();
-
-            $admins = User::role('admin')->get();
-
-            Notification::send($students, new NewJobPostedNotification($job));
-            Notification::send($admins, new NewJobPostedNotification($job));
+                
+            Notification::send($recipients, new NewJobPostedNotification($job));
 
             return redirect()->route('jobs.show', $job)
                 ->with('success', 'Job posting created successfully');

@@ -29,15 +29,16 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         $user = $request->user();
-        $profile = $user->profile ?? $user->profile()->create([
+
+        $profile = $user->profile()->firstOrCreate([], [
             'phone' => null,
             'address' => null,
             'current_job' => null,
             'company' => null,
             'bio' => null,
-            'social_links' => [],
-            'skills' => [],
-            'interests' => [],
+            'skills' => '',
+            'interests' => '',
+            'social_links' => '',
             'profile_completion' => 0,
         ]);
 
@@ -69,39 +70,29 @@ class ProfileController extends Controller
     public function updateDetails(ProfileDetailsRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $profileData = $request->validated();
+        $data = $request->validated();
 
-        // Process skills and interests
-        $profileData['skills'] = isset($profileData['skills'])
-            ? array_filter(array_map('trim', explode(',', $profileData['skills'])))
-            : [];
+        // Convert comma-separated inputs to array for mutators
+        $data['skills'] = isset($data['skills']) ? array_map('trim', explode(',', $data['skills'])) : [];
+        $data['interests'] = isset($data['interests']) ? array_map('trim', explode(',', $data['interests'])) : [];
 
-        $profileData['interests'] = isset($profileData['interests'])
-            ? array_filter(array_map('trim', explode(',', $profileData['interests'])))
-            : [];
-
-        // Process social links
+        // Social links array
         $socialLinks = [
-            'linkedin' => $profileData['linkedin'] ?? null,
-            'twitter' => $profileData['twitter'] ?? null,
-            'github' => $profileData['github'] ?? null,
-            'website' => $profileData['website'] ?? null,
+            $data['linkedin'] ?? null,
+            $data['twitter'] ?? null,
+            $data['github'] ?? null,
+            $data['website'] ?? null,
         ];
-        $profileData['social_links'] = array_filter($socialLinks);
+        $data['social_links'] = array_filter($socialLinks);
 
-        // Remove temporary fields
-        unset(
-            $profileData['linkedin'],
-            $profileData['twitter'],
-            $profileData['github'],
-            $profileData['website']
-        );
+        unset($data['linkedin'], $data['twitter'], $data['github'], $data['website']);
 
-        // Update or create profile
-        $user->profile()->updateOrCreate([], $profileData);
-        $user->profile->calculateCompletion();
+        $profile = $user->profile()->firstOrCreate([]);
+        $profile->fill($data)->save();
 
-        return Redirect::route('profile.edit')->with('status', 'profile-details-updated');
+        $profile->calculateCompletion();
+
+        return redirect()->route('profile.edit')->with('status', 'profile-details-updated');
     }
 
     /**

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Profile;
 use App\Models\ActivityLog;
-use App\Providers\RouteServiceProvider;
+use App\Notifications\UserRegisteredNotification;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,30 +40,53 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'student_id' => ['required', 'string', 'max:50', 'unique:users'],
             'graduation_year' => ['required', 'digits:4', 'integer', 'min:1900', 'max:' . (date('Y') + 5)],
             'program' => ['required', 'string', 'max:255'],
         ]);
 
+        // Check if first user
+        $isFirstUser = User::count() === 0;
+
+        // Generate Student ID
+        $studentId = $isFirstUser
+            ? 'ADMIN001'
+            : 'STU' . date('Y') . mt_rand(1000, 9999);
+
+        // Create user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'student_id' => $request->student_id,
+            'student_id' => $studentId,
             'graduation_year' => $request->graduation_year,
             'program' => $request->program,
-            'is_approved' => false,
+            'is_approved' => $isFirstUser, // first user auto-approved
         ]);
 
-        // Determine role based on graduation year
-        $currentYear = date('Y');
-        $role = ($request->graduation_year <= $currentYear) ? 'alumni' : 'student';
-        
-        $user->assignRole($role);
+        // Assign role dynamically
+        if ($isFirstUser) {
+            $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+            $user->assignRole($adminRole);
+        } else {
+            // Determine role name
+            $roleName = ($request->graduation_year <= date('Y')) ? 'alumni' : 'student';
+            $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $user->assignRole($role);
+        }
 
+        // Create empty profile safely
         try {
-            // Create empty profile
-            $user->profile()->create([]);
+            $user->profile()->create([
+                'phone' => null,
+                'address' => null,
+                'current_job' => null,
+                'company' => null,
+                'bio' => null,
+                'social_links' => [],
+                'skills' => [],
+                'interests' => [],
+                'profile_completion' => 0,
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to create profile for user: ' . $user->id, [
                 'error' => $e->getMessage(),
@@ -71,19 +94,32 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        // Log the registration
+        // Log registration
         ActivityLog::create([
             'user_id' => $user->id,
             'action' => 'register',
-            'description' => 'User registered with ' . $role . ' role',
+            'description' => 'User registered with role: ' . ($isFirstUser ? 'admin' : $roleName),
             'model_type' => User::class,
             'model_id' => $user->id,
         ]);
+
+        // Notify admin if not first user
+        if (!$isFirstUser) {
+            $admin = User::role('admin')->first();
+            if ($admin) {
+                $admin->notify(new UserRegisteredNotification($user));
+            }
+        }
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Registration successful! Your account is pending approval.');
+        $message = $isFirstUser
+            ? 'Admin account created. You have full access.'
+            : 'Registration successful! Your account is pending admin approval.';
+
+        return redirect()->route('dashboard')->with('success', $message);
     }
+
 }

@@ -33,7 +33,12 @@ class AdminController extends Controller
     {
         Gate::authorize('access-admin-dashboard');
 
-        // User statistics
+        // Ensure roles exist
+        foreach (['admin', 'alumni', 'student'] as $roleName) {
+            Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        }
+
+        // Now it's safe to query users by role
         $userCounts = [
             'total' => User::count(),
             'admins' => User::role('admin')->count(),

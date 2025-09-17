@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\JobPosting;
+use App\Notifications\NewJobPostedNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
@@ -54,6 +58,5 @@ class NotificationController extends Controller
 
         return back()->with('success', 'Notification deleted');
     }
-
 
 }
