@@ -30,7 +30,7 @@ class NewJobPostedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['database', 'broadcast']; // only add 'mail' if your mailer works
     }
 
     /**
@@ -39,31 +39,45 @@ class NewJobPostedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject("New Job Posted: {$this->job->title}")
-                    ->line("{$this->job->poster->name} has posted a new {$this->job->type}.")
-                    ->line("Company: {$this->job->company}")
-                    ->line("Location: {$this->job->location}")
-                    ->action('View Job Posting', route('jobs.show', $this->job->id));
+            ->subject("New Job Posted: {$this->job->title}")
+            ->line("{$this->job->poster->name} has posted a new {$this->job->type}.")
+            ->line("Company: {$this->job->company}")
+            ->line("Location: {$this->job->location}")
+            ->action('View Job Posting', route('jobs.show', $this->job->id));
     }
 
     /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
+     * Get the array representation of the notification (shared by DB + Broadcast).
      */
     public function toArray(object $notifiable): array
     {
         return [
-            'job_id' => $this->job->id,
-            'title' => $this->job->title,
+            'job_id'  => $this->job->id,
+            'title'   => $this->job->title,
             'message' => "New job posted: {$this->job->title} by {$this->job->poster->name}",
-            'url' => route('jobs.show', $this->job->id),
-            'type' => 'new_job_posted'
+            'url'     => route('jobs.show', $this->job->id),
+            'type'    => 'new_job_posted'
         ];
     }
 
+    /**
+     * Store in database.
+     */
+    public function toDatabase($notifiable)
+    {
+        return [
+            'job_id'  => $this->job->id,
+            'title'   => $this->job->title,
+            'message' => "New job posted: {$this->job->title}",
+            'url'     => route('jobs.show', $this->job->id),
+            'type'    => 'new_job_posted'
+        ];
+    }
 
-    public function toBroadcast($notifiable)
+    /**
+     * Broadcast in real-time (Laravel Echo / Pusher).
+     */
+    public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage($this->toArray($notifiable));
     }
