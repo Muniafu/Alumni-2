@@ -24,16 +24,10 @@ class Profile extends Model
         'profile_completion',
     ];
 
-    protected $casts = [
-        'social_links' => 'array',
-        'skills' => 'array',
-        'interests' => 'array',
-    ];
-
     protected $attributes = [
-        'social_links' => [],
-        'skills' => [],
-        'interests' => [],
+        'social_links' => '',
+        'skills' => '',
+        'interests' => '',
         'profile_completion' => 0,
     ];
 
@@ -46,49 +40,71 @@ class Profile extends Model
     }
 
     /**
+     * Accessors for array-like fields
+     */
+    public function getSkillsArrayAttribute(): array
+    {
+        return $this->skills ? explode(',', $this->skills) : [];
+    }
+
+    public function getInterestsArrayAttribute(): array
+    {
+        return $this->interests ? explode(',', $this->interests) : [];
+    }
+
+    public function getSocialLinksArrayAttribute(): array
+    {
+        return $this->social_links ? explode(',', $this->social_links) : [];
+    }
+
+    /**
+     * Mutators to save array as comma-separated string
+     */
+    public function setSkillsAttribute($value)
+    {
+        $this->attributes['skills'] = is_array($value) ? implode(',', $value) : $value;
+    }
+
+    public function setInterestsAttribute($value)
+    {
+        $this->attributes['interests'] = is_array($value) ? implode(',', $value) : $value;
+    }
+
+    public function setSocialLinksAttribute($value)
+    {
+        $this->attributes['social_links'] = is_array($value) ? implode(',', $value) : $value;
+    }
+
+    /**
      * Calculate profile completion percentage
      */
     public function calculateCompletion(): int
     {
         $completedFields = 0;
 
-        // Fields to check
         $userFields = ['name', 'email'];
         $profileFields = ['phone', 'address', 'current_job', 'company', 'bio'];
         $arrayFields = ['skills', 'interests', 'social_links'];
 
-        // Count completed user fields
         foreach ($userFields as $field) {
-            if (!empty($this->user->$field)) {
-                $completedFields++;
-            }
+            if (!empty($this->user->$field)) $completedFields++;
         }
 
-        // Count completed profile fields
         foreach ($profileFields as $field) {
-            if (!empty($this->$field)) {
-                $completedFields++;
-            }
+            if (!empty($this->$field)) $completedFields++;
         }
 
-        // Count array fields (at least 1 item)
         foreach ($arrayFields as $field) {
-            if (!empty($this->$field) && count($this->$field) >= 1) {
+            if (!empty($this->{$field}) && count(explode(',', $this->{$field})) >= 1) {
                 $completedFields++;
             }
         }
 
-        // Dynamic total fields
         $totalFields = count($userFields) + count($profileFields) + count($arrayFields);
-
-        // Calculate percentage
         $completionPercentage = min(100, round(($completedFields / $totalFields) * 100));
-
-        // Update model
         $this->profile_completion = $completionPercentage;
         $this->save();
 
-        // Send notification if fully completed (once)
         if ($completionPercentage === 100 && !$this->user->notifications()
             ->where('type', ProfileCompletedNotification::class)
             ->exists()) {
@@ -96,29 +112,5 @@ class Profile extends Model
         }
 
         return $completionPercentage;
-    }
-
-    /**
-     * Get a specific social link
-     */
-    public function getSocialLink(string $platform): ?string
-    {
-        return $this->social_links[$platform] ?? null;
-    }
-
-    /**
-     * Accessor: comma-separated skills
-     */
-    public function getSkillsListAttribute(): string
-    {
-        return implode(', ', $this->skills);
-    }
-
-    /**
-     * Accessor: comma-separated interests
-     */
-    public function getInterestsListAttribute(): string
-    {
-        return implode(', ', $this->interests);
     }
 }

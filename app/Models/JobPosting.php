@@ -110,7 +110,21 @@ class JobPosting extends Model
 
     protected static function booted()
     {
-        //
+        static::created(function ($job) {
+            // 🔔 Notify only approved students
+            $students = \App\Models\User::query()
+                ->where('is_approved', true)
+                ->whereHas('roles', fn($q) => $q->where('name', 'student'))
+                ->get();
+
+            // 🔔 Notify admins
+            $admins = \App\Models\User::role('admin')->get();
+
+            \Illuminate\Support\Facades\Notification::send(
+                $students->merge($admins),
+                new \App\Notifications\NewJobPostedNotification($job)
+            );
+        });
     }
 
 }

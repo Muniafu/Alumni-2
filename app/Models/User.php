@@ -54,7 +54,7 @@ class User extends Authenticatable
         'approved_at' => 'datetime',
     ];
 
-    protected $dats = ['deleted_at'];
+    protected $dates = ['deleted_at'];
 
     public function profile()
     {
@@ -97,7 +97,7 @@ class User extends Authenticatable
     {
         return $this->is_approved;
     }
-    
+
     public function events()
     {
         return $this->belongsToMany(Event::class, 'event_user')->withTimestamps();
