@@ -25,11 +25,11 @@ class ActivityLogObserver
     protected function logActivity($action, $model)
     {
         ActivityLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => Auth::id() ?? $model->id,
             'action' => $action,
-            'model_type' => class_basename($model),
-            'model_id' => request()->userAgent(),
-            'description' => $model->toArray(),
+            'model_type' => get_class($model),
+            'model_id' => $model->id ?? null,
+            'description' => json_encode($model->toArray()),
         ]);
     }
 }
