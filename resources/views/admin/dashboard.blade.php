@@ -144,14 +144,6 @@
                     </div>
                 </a>
             </div>
-            <div class="col-md-4">
-                <a href="{{ route('forum.index') }}" class="card shadow-sm border-0 text-decoration-none h-100">
-                    <div class="card-body">
-                        <h6 class="fw-semibold text-dark">Forum Moderation</h6>
-                        <p class="small text-muted">Moderate discussions and posts</p>
-                    </div>
-                </a>
-            </div>
         </div>
     </div>
 
@@ -162,14 +154,12 @@
             @forelse($recentActivities as $activity)
                 <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
                     <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
-                        @if(isset($activity->name))
-                            {{ substr($activity->name, 0, 1) }}
-                        @elseif(isset($activity->organizer))
-                            {{ substr($activity->organizer->name, 0, 1) }}
-                        @elseif(isset($activity->author))
-                            {{ substr($activity->author->name, 0, 1) }}
-                        @elseif(isset($activity->poster))
-                            {{ substr($activity->poster->name, 0, 1) }}
+                        @if($activity instanceof \App\Models\Event)
+                            E
+                        @elseif($activity instanceof \App\Models\JobPosting)
+                            J
+                        @elseif($activity instanceof \App\Models\ForumThread)
+                            F
                         @endif
                     </div>
                     <div class="flex-fill">
@@ -180,27 +170,15 @@
                                 New Job Posting: {{ $activity->title }}
                             @elseif($activity instanceof \App\Models\ForumThread)
                                 New Forum Thread: {{ $activity->title }}
-                            @elseif($activity instanceof \App\Models\User)
-                                New User Registration: {{ $activity->name }}
-                            @elseif(isset($activity->action) && $activity->action === 'approved')
-                                User Approved: {{ $activity->user->name }}
-                            @elseif(isset($activity->action) && $activity->action === 'rejected')
-                                User Rejected: {{ $activity->user->name }}
-                            @elseif(isset($activity->action) && $activity->action === 'profile_updated')
-                                Profile Updated: {{ $activity->user->name }}
                             @endif
                         </p>
                         <p class="small text-muted mb-0">
                             @if($activity instanceof \App\Models\Event)
-                                Organized by {{ $activity->organizer->name }}
+                                Organized by {{ $activity->organizer?->name ?? 'Unknown' }}
                             @elseif($activity instanceof \App\Models\JobPosting)
-                                Posted by {{ $activity->poster->name }}
+                                Posted by {{ $activity->poster?->name ?? 'Unknown' }}
                             @elseif($activity instanceof \App\Models\ForumThread)
-                                Started by {{ $activity->author->name }}
-                            @elseif($activity instanceof \App\Models\User)
-                                Registered on {{ $activity->created_at->format('M d, Y') }}
-                            @elseif(isset($activity->action))
-                                By Admin: {{ $activity->admin->name ?? 'System' }}
+                                Started by {{ $activity->author?->name ?? 'Unknown' }}
                             @endif
                         </p>
                     </div>
@@ -212,8 +190,6 @@
                             <a href="{{ route('jobs.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
                         @elseif($activity instanceof \App\Models\ForumThread)
                             <a href="{{ route('forum.threads.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
-                        @elseif($activity instanceof \App\Models\User)
-                            <a href="{{ route('admin.user.show', $activity) }}" class="small text-primary text-decoration-none">View</a>
                         @endif
                     </div>
                 </div>
@@ -223,11 +199,36 @@
         </div>
     </div>
 </div>
+
+<style>
+.border-purple { border-color: #6f42c1 !important; }
+.text-purple { color: #6f42c1 !important; }
+</style>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // same chart.js config
+    // User Growth Chart (example)
+    const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+    new Chart(userCtx, {
+        type: 'line',
+        data: {
+            labels: @json(array_column($userGrowth->toArray(), 'month')),
+            datasets: [{ label: 'New Users', data: @json(array_column($userGrowth->toArray(), 'count')), borderColor: '#0d6efd' }]
+        },
+        options: { responsive: true }
+    });
+
+    // Event Attendance Chart (example; use $eventAttendance)
+    const eventCtx = document.getElementById('eventAttendanceChart').getContext('2d');
+    new Chart(eventCtx, {
+        type: 'bar',
+        data: {
+            labels: @json(array_column($eventAttendance->toArray(), 'name')),
+            datasets: [{ label: 'Attendance', data: @json(array_column($eventAttendance->toArray(), 'attendance')), backgroundColor: '#198754' }]
+        },
+        options: { responsive: true }
+    });
 </script>
 @endpush
