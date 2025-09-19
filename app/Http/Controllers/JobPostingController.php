@@ -125,7 +125,7 @@ class JobPostingController extends Controller
                     $q->whereIn('name', ['alumni', 'student', 'admin']);
                 })
                 ->get();
-                
+
             Notification::send($recipients, new NewJobPostedNotification($job));
 
             return redirect()->route('jobs.show', $job)
@@ -154,7 +154,7 @@ class JobPostingController extends Controller
     public function update(Request $request, JobPosting $job)
     {
 
-        Gate::authorize('update', $job);
+        $this->authorize('update', $job);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -194,13 +194,16 @@ class JobPostingController extends Controller
      */
     public function destroy(JobPosting $job)
     {
-
         Gate::authorize('delete', $job);
+
+        // Store job info before deletion for notification
+        $jobTitle = $job->title;
+        $applicants = $job->applications()->with('applicant')->get();
+
         $job->delete();
 
         return redirect()->route('jobs.index')
             ->with('success', 'Job posting deleted successfully');
-
     }
 
     /**
@@ -208,18 +211,28 @@ class JobPostingController extends Controller
      */
     public function apply(Request $request, JobPosting $job)
     {
-
+        // Check if user can apply
         if (!$job->canApply()) {
             return back()->with('error', 'You cannot apply to this job posting.');
         }
 
+        // Validate request
         $validated = $request->validate([
             'cover_letter' => 'required|string|min:100|max:2000',
-            'resume' => 'required|file|mimes:pdf,doc,docx|max:2048',
+            'resume' => 'required|file|mimes:pdf,doc,docx|max:2048', // 2MB
         ]);
 
-        $resumePath = $request->file('resume')->store('resumes', 'private');
+        // Ensure the private folder exists
+        $resumeFolder = 'resumes';
+        $privateDisk = 'private';
+        if (!Storage::disk($privateDisk)->exists($resumeFolder)) {
+            Storage::disk($privateDisk)->makeDirectory($resumeFolder);
+        }
 
+        // Store resume in private storage
+        $resumePath = $request->file('resume')->store($resumeFolder, $privateDisk);
+
+        // Create job application
         $application = JobApplication::create([
             'job_posting_id' => $job->id,
             'user_id' => auth()->id(),
@@ -227,14 +240,17 @@ class JobPostingController extends Controller
             'resume_path' => $resumePath,
         ]);
 
-        // Notify job poster (alumni) and admins about new application
-        $job->poster->notify(new JobApplicationNotification($application));
+        // Notify job poster
+        if ($job->poster) {
+            $job->poster->notify(new JobApplicationNotification($application));
+        }
+
+        // Notify all admins
         $admins = User::role('admin')->get();
         Notification::send($admins, new JobApplicationNotification($application));
 
         return redirect()->route('jobs.show', $job)
-            ->with('success', 'Application submitted successfully');
-
+                        ->with('success', 'Your application has been submitted successfully.');
     }
 
     /**
@@ -256,13 +272,15 @@ class JobPostingController extends Controller
     /**
      * Show a single application.
      */
-    public function showApplication(JobPosting $job, JobApplication $application)
+    public function showApplication(JobApplication $application)
     {
-        Gate::authorize('viewApplication', [$job, $application]);
+        // Authorize access to view this application
+        $this->authorize('viewApplication', $application);
 
-        $application->load('applicant.profile');
+        // Load relationships
+        $application->load(['jobPosting', 'applicant.profile']);
 
-        return view('jobs.application-show', compact('job', 'application'));
+        return view('jobs.application-show', compact('application'));
     }
 
     /**
@@ -287,6 +305,22 @@ class JobPostingController extends Controller
         }
 
         return back()->with('success', 'Application status updated');
-
     }
+
+    public function downloadResume(JobApplication $application)
+    {
+        $this->authorize('view', $application); // Only authorized users
+
+        $disk = Storage::disk('private'); /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+
+        if (!$disk->exists($application->resume_path)) {
+            abort(404, 'Resume file not found.');
+        }
+
+        return $disk->download(
+            $application->resume_path,
+            $application->applicant->name . '_resume.' . pathinfo($application->resume_path, PATHINFO_EXTENSION)
+        );
+    }
+
 }

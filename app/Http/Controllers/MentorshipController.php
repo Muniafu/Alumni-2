@@ -141,7 +141,7 @@ class MentorshipController extends Controller
         $admins = User::role('admin')->get();
         Notification::send($admins, new MentorshipRequestNotification($mentorshipRequest));
 
-        return redirect()->route('mentorship.requests.sent')
+        return redirect()->route('mentorship.requests')
             ->with('success', 'Mentorship request sent successfully');
     }
 

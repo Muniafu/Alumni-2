@@ -18,7 +18,6 @@ class StudentController extends Controller
     {
         Gate::authorize('access-student-dashboard');
         $user = Auth::user();
-        $this->ensureProfileExists($user);
 
         $user->load('profile');
 

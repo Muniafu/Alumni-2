@@ -38,7 +38,9 @@ class AdminController extends Controller
             Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
         }
 
-        // Now it's safe to query users by role
+        // -----------------------------
+        // User Statistics
+        // -----------------------------
         $userCounts = [
             'total' => User::count(),
             'admins' => User::role('admin')->count(),
@@ -48,84 +50,97 @@ class AdminController extends Controller
             'pending_approvals' => User::pendingApproval()->count(),
         ];
 
-        // Event statistics
+        // User growth by month (last 12 months)
+        $userGrowth = User::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->where('created_at', '>=', now()->subYear())
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'month' => Carbon::parse($item->month . '-01')->format('M Y'),
+                    'count' => $item->count,
+                ];
+            });
+
+        // -----------------------------
+        // Event Statistics
+        // -----------------------------
+        $eventsWithRsvps = Event::has('rsvps')->withCount('rsvps')->get();
+
         $eventStats = [
             'total' => Event::count(),
-            'upcoming' => Event::upcoming()->count(),
-            'past' => Event::past()->count(),
-            'rsvps' => EventRsvp::count(),
-            'avg_attendance' => Event::has('rsvps')->withCount('rsvps')->get()->avg('rsvps_count'),
+            'upcoming' => Event::where('start', '>=', now())->count(), // Assume 'start' field
+            'past' => Event::where('start', '<', now())->count(),
+            'rsvps' => EventRsvp::count(), // Assume model
+            'avg_attendance' => Event::withCount('rsvps')->get()->avg('rsvps_count') ?? 0,
         ];
 
-        // Job statistics
+        // Last 10 past events with attendance
+        $eventAttendance = Event::withCount('rsvps')
+            ->where('start', '<', now())
+            ->orderBy('start', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn($e) => ['name' => $e->title, 'attendance' => $e->rsvps_count]);
+
+        // -----------------------------
+        // Job Statistics
+        // -----------------------------
         $jobStats = [
             'total' => JobPosting::count(),
-            'active' => JobPosting::active()->count(),
+            'active' => JobPosting::where('application_deadline', '>=', now())->count(), // Assume 'deadline'
             'applications' => JobApplication::count(),
-            'avg_applications' => JobPosting::has('applications')->withCount('applications')->get()->avg('applications_count'),
+            'avg_applications' => JobPosting::withCount('applications')->get()->avg('applications_count') ?? 0,
         ];
 
-        // Forum statistics
+        // -----------------------------
+        // Forum Statistics
+        // -----------------------------
         $forumStats = [
             'threads' => ForumThread::count(),
             'posts' => ForumPost::count(),
             'recent_posts' => ForumPost::where('created_at', '>=', now()->subWeek())->count(),
         ];
 
-        // Messaging statistics
+        // -----------------------------
+        // Messaging Statistics
+        // -----------------------------
         $messagingStats = [
             'conversations' => Conversation::count(),
             'messages' => Message::count(),
         ];
 
-        // User growth data
-        $userGrowth = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->where('created_at', '>=', now()->subYear())
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'date' => Carbon::parse($item->date)->format('M Y'),
-                    'count' => $item->count,
-                ];
-            });
+        // -----------------------------
+        // Recent Platform Activities
+        // -----------------------------
+        $events = Event::with('organizer')->latest()->limit(3)->get();
+        $jobs = JobPosting::with('poster')->latest()->limit(3)->get();
+        $threads = ForumThread::with('author')->latest()->limit(3)->get();
 
-        // Event attendance data
-        $eventAttendance = Event::withCount('rsvps')
-            ->where('end', '<', now())
-            ->orderBy('start')
-            ->limit(10)
-            ->get()
-            ->map(function ($event) {
-                return [
-                    'name' => $event->title,
-                    'attendance' => $event->rsvps_count,
-                ];
-            });
-
-        // Recent platform activity
-        $recentActivities = collect()
-            ->merge(Event::with('organizer')->latest()->limit(3)->get())
-            ->merge(JobPosting::with('poster')->latest()->limit(3)->get())
-            ->merge(ForumThread::with('author')->latest()->limit(3)->get())
+        $recentActivities = $events->concat($jobs)->concat($threads)
             ->sortByDesc('created_at')
             ->take(5);
 
+        // -----------------------------
+        // Return view with all data
+        // -----------------------------
         return view('admin.dashboard', compact(
             'userCounts',
+            'userGrowth',
             'eventStats',
+            'eventAttendance',
             'jobStats',
             'forumStats',
             'messagingStats',
-            'userGrowth',
-            'eventAttendance',
             'recentActivities'
         ));
     }
 
     public function showUser(User $user)
     {
+        $permissions = Permission::all();
+
         return view('admin.user-show', compact('user'));
     }
 

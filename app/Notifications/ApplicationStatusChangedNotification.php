@@ -29,11 +29,23 @@ class ApplicationStatusChangedNotification extends Notification implements Shoul
 
     public function toMail($notifiable)
     {
+        $statusLabels = [
+            'submitted' => 'Submitted',
+            'reviewed' => 'Under Review',
+            'interviewed' => 'Interviewing',
+            'rejected' => 'Not Selected',
+            'hired' => 'Hired',
+            'revoked' => 'Revoked'
+        ];
+
+        $oldStatusLabel = $statusLabels[$this->oldStatus] ?? $this->oldStatus;
+        $newStatusLabel = $statusLabels[$this->application->status] ?? $this->application->status;
+
         return (new MailMessage)
                     ->subject('Your Application Status Has Changed')
                     ->line('The status of your application for ' . $this->application->job->title . ' has changed.')
-                    ->line('Old Status: ' . ucfirst($this->oldStatus))
-                    ->line('New Status: ' . ucfirst($this->application->status))
+                    ->line('Old Status: ' . $oldStatusLabel)
+                    ->line('New Status: ' . $newStatusLabel)
                     ->action('View Application', route('jobs.show', $this->application->job))
                     ->line('Thank you for using our application!');
     }

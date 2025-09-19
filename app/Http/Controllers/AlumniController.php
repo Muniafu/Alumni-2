@@ -4,55 +4,85 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\JobPosting;
-use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Mentorship;
+use App\Models\ForumCategory;
+use App\Models\ForumThread;
 use App\Models\Profile;
-use Illuminate\Support\Facades\Gate;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class AlumniController extends Controller
 {
+    /**
+     * Display the alumni dashboard.
+     */
     public function dashboard()
     {
         Gate::authorize('access-alumni-dashboard');
+
         $user = Auth::user();
         $this->ensureProfileExists($user);
+        $profile = $user->profile;
+        $profile->calculateCompletion();
 
-        $profile =$user->profile;
+        // Jobs: Recent + user's postings
+        $recentJobs = JobPosting::active()->with('poster')->latest()->take(5)->get();
         $userJobPostings = JobPosting::where('user_id', $user->id)
             ->withCount('applications')
             ->latest()
             ->take(5)
-            ->get();
+            ->get()
+            ->map(fn($job) => tap($job, fn($j) => $j->canViewApplications = $user->can('viewApplications', $job)));
 
+        // Events: Upcoming + user's past events for create preview
         $upcomingAlumniEvents = Event::upcoming()
-            ->with(['rsvps' => function($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
+            ->with(['rsvps' => fn($q) => $q->where('user_id', $user->id)])
             ->latest()
             ->take(3)
             ->get()
-            ->each(function ($event) use ($user) {
-                $event->is_registered = $event->rsvps->contains('user_id', $user->id);
-            });
+            ->each(fn($event) => $event->is_registered = $event->rsvps->contains('user_id', $user->id));
+        $userEvents = Event::where('user_id', $user->id)->latest()->take(3)->get(); // For create section
 
-        $canPostJobs = $user->can('create jobs');
-        $canViewEvents = $user->can('view events');
+        // Mentorships: Offered/Requested
+        $mentorshipsOffered = $user->mentorships()->latest()->take(3)->get();
+        $mentorshipsRequested = $user->mentorshipRequests()->latest()->take(3)->get();
+
+        // Forums: Categories + user's recent threads
+        $forumCategories = ForumCategory::withCount(['threads', 'posts'])->take(3)->get();
+        $userThreads = ForumThread::where('user_id', $user->id)->latest()->take(3)->get();
+
+        // Permissions (hyphenated to match gates)
+        $permissions = [
+            'create-jobs' => $user->can('create-jobs'),
+            'view-jobs' => true,
+            'create-events' => $user->can('create-events'),
+            'view-events' => $user->can('view-events'),
+            'create-forums' => $user->can('create-forums'),
+            'view-forums' => $user->can('view-forums'),
+            'create-mentorship' => $user->can('create-mentorship'),
+            'view-mentorship' => $user->can('view-mentorship'),
+        ];
 
         return view('alumni.dashboard', compact(
-            'user',
-            'profile',
-            'canPostJobs',
-            'canViewEvents',
-            'userJobPostings',
-            'upcomingAlumniEvents',
+            'user', 'profile',
+            'recentJobs', 'userJobPostings',
+            'upcomingAlumniEvents', 'userEvents',
+            'mentorshipsOffered', 'mentorshipsRequested',
+            'forumCategories', 'userThreads',
+            'permissions'
         ));
     }
 
+    /**
+     * Show edit profile page.
+     */
     public function editProfile()
     {
-        Gate::authorize('edit-profile', Auth::user());
+        /** @var User $user */
         $user = Auth::user();
+        Gate::authorize('edit-profile', $user);
         $this->ensureProfileExists($user);
 
         return view('alumni.profile', [
@@ -61,10 +91,14 @@ class AlumniController extends Controller
         ]);
     }
 
+    /**
+     * Update the alumni profile.
+     */
     public function updateProfile(Request $request)
     {
-        Gate::authorize('edit-profile', Auth::user());
+        /** @var User $user */
         $user = Auth::user();
+        Gate::authorize('edit-profile', $user);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -85,12 +119,16 @@ class AlumniController extends Controller
 
         $profileData = $this->prepareProfileData($validated);
         $user->profile()->updateOrCreate([], $profileData);
+
         $user->profile->calculateCompletion();
 
         return redirect()->route('alumni.dashboard')
             ->with('success', 'Profile updated successfully');
     }
 
+    /**
+     * Ensure that a user has a profile.
+     */
     protected function ensureProfileExists(User $user): void
     {
         if (!$user->profile) {
@@ -108,6 +146,9 @@ class AlumniController extends Controller
         }
     }
 
+    /**
+     * Prepare profile data from the validated request.
+     */
     protected function prepareProfileData(array $data): array
     {
         return [
