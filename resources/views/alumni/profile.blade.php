@@ -121,27 +121,27 @@
                         <div class="mb-3">
                             <label for="skills" class="form-label">Skills (comma separated)</label>
                             <input id="skills" type="text"
-                                   class="form-control @error('skills') is-invalid @enderror"
-                                   name="skills"
-                                   value="{{ old('skills', implode(', ', $user->profile->skills ?? [])) }}"
-                                   placeholder="e.g., PHP, JavaScript, Project Management">
+                                class="form-control @error('skills') is-invalid @enderror"
+                                name="skills"
+                                value="{{ old('skills', implode(', ', $user->profile->skills_array ?? [])) }}"
+                                placeholder="e.g., PHP, JavaScript, Project Management">
                             @error('skills') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="interests" class="form-label">Professional Interests</label>
                             <input id="interests" type="text"
-                                   class="form-control @error('interests') is-invalid @enderror"
-                                   name="interests"
-                                   value="{{ old('interests', implode(', ', $user->profile->interests ?? [])) }}"
-                                   placeholder="e.g., Web Development, Data Science, Mentoring">
+                                class="form-control @error('interests') is-invalid @enderror"
+                                name="interests"
+                                value="{{ old('interests', implode(', ', $user->profile->interests_array ?? [])) }}"
+                                placeholder="e.g., Web Development, Data Science, Mentoring">
                             @error('interests') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="bio" class="form-label">Professional Bio</label>
                             <textarea id="bio" name="bio" rows="4"
-                                      class="form-control @error('bio') is-invalid @enderror">{{ old('bio', $user->profile->bio) }}</textarea>
+                                    class="form-control @error('bio') is-invalid @enderror">{{ old('bio', $user->profile->bio ?? '') }}</textarea>
                             @error('bio') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
@@ -150,41 +150,26 @@
                     <div class="col-12">
                         <h5 class="fw-semibold text-dark mb-3">Social Links</h5>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="linkedin" class="form-label">LinkedIn</label>
-                                <input id="linkedin" type="url"
-                                       class="form-control @error('linkedin') is-invalid @enderror"
-                                       name="linkedin" value="{{ old('linkedin', $user->profile->getSocialLink('linkedin')) }}"
-                                       placeholder="https://linkedin.com/in/username">
-                                @error('linkedin') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
+                            @php
+                                $socials = [
+                                    'linkedin' => 'LinkedIn',
+                                    'twitter' => 'Twitter',
+                                    'github' => 'GitHub',
+                                    'website' => 'Personal Website'
+                                ];
+                            @endphp
 
-                            <div class="col-md-6">
-                                <label for="twitter" class="form-label">Twitter</label>
-                                <input id="twitter" type="url"
-                                       class="form-control @error('twitter') is-invalid @enderror"
-                                       name="twitter" value="{{ old('twitter', $user->profile->getSocialLink('twitter')) }}"
-                                       placeholder="https://twitter.com/username">
-                                @error('twitter') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="github" class="form-label">GitHub</label>
-                                <input id="github" type="url"
-                                       class="form-control @error('github') is-invalid @enderror"
-                                       name="github" value="{{ old('github', $user->profile->getSocialLink('github')) }}"
-                                       placeholder="https://github.com/username">
-                                @error('github') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="website" class="form-label">Personal Website</label>
-                                <input id="website" type="url"
-                                       class="form-control @error('website') is-invalid @enderror"
-                                       name="website" value="{{ old('website', $user->profile->getSocialLink('website')) }}"
-                                       placeholder="https://yourwebsite.com">
-                                @error('website') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
+                            @foreach($socials as $key => $label)
+                                <div class="col-md-6">
+                                    <label for="{{ $key }}" class="form-label">{{ $label }}</label>
+                                    <input id="{{ $key }}" type="url"
+                                        class="form-control @error($key) is-invalid @enderror"
+                                        name="{{ $key }}"
+                                        value="{{ old($key, $user->profile->getSocialLink($key) ?? '') }}"
+                                        placeholder="https://{{ strtolower($key) }}.com/username">
+                                    @error($key) <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
