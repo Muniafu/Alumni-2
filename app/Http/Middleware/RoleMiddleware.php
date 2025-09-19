@@ -13,8 +13,9 @@ class RoleMiddleware
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  mixed ...$roles
      */
-    public function handle(Request $request, Closure $next, ...$roles): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         $user = Auth::user();
 
@@ -22,13 +23,11 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        foreach ($roles as $role) {
-            if ($user->hasRole($role)) {
-                return $next($request);
-            }
+        // Use Spatie's hasAnyRole() for multiple roles
+        if ($user->hasAnyRole($roles)) {
+            return $next($request);
         }
 
-        // 403 Forbidden
         abort(403, 'Unauthorized action.');
     }
 }
