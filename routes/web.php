@@ -77,7 +77,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     | Jobs
     |-----------------------------
     */
-    Route::middleware(['can:create jobs'])->group(function () {
+    Route::middleware(['can:create-jobs'])->group(function () {
         Route::resource('jobs', JobPostingController::class)->except(['index', 'show']);
     });
 
@@ -95,6 +95,10 @@ Route::middleware(['auth', 'approved'])->group(function () {
         ->name('applications.update');
     Route::get('/applications/{application}', [JobPostingController::class, 'showApplication'])
         ->name('applications.show');
+    Route::get('/applications/{application}/resume', [JobPostingController::class, 'downloadResume'])
+        ->middleware(['auth'])
+        ->name('applications.resume.download');
+    Route::get('/resume/{filename}', [JobPostingController::class, 'downloadResume'])->name('resume.download');
 
     /*
     |-----------------------------
@@ -102,6 +106,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     |-----------------------------
     */
     Route::resource('conversations', ConversationController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+
     Route::resource('conversations.messages', MessageController::class)->only(['store', 'destroy']);
 
     /*
@@ -110,7 +115,8 @@ Route::middleware(['auth', 'approved'])->group(function () {
     |-----------------------------
     */
     Route::prefix('forum')->name('forum.')->group(function () {
-        Route::get('/', [ForumCategoryController::class, 'index'])->name('index');
+        Route::get('/', [ForumThreadController::class, 'index'])->name('index');
+        Route::get('/categories', [ForumCategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/{category}', [ForumCategoryController::class, 'show'])->name('categories.show');
         Route::resource('threads', ForumThreadController::class)->except(['index']);
         Route::post('/threads/{thread}/posts', [ForumPostController::class, 'store'])->name('posts.store');
@@ -120,9 +126,9 @@ Route::middleware(['auth', 'approved'])->group(function () {
     });
 
     /*
-    |-----------------------------
+    |----------------------------
     | Notifications
-    |-----------------------------
+    |----------------------------
     */
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.all');
     Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
@@ -135,7 +141,7 @@ Route::middleware(['auth', 'approved'])->group(function () {
     |  "mentor students" permission)
     |-----------------------------
     */
-    Route::middleware(['auth', 'role:alumni', 'can:mentor students'])->group(function () {
+    Route::middleware(['auth', 'role:alumni', 'can:create-mentorship'])->group(function () {
         Route::get('/mentorship/create', [MentorshipController::class, 'create'])->name('mentorship.create');
         Route::post('/mentorship', [MentorshipController::class, 'store'])->name('mentorship.store');
     });
