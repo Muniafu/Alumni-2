@@ -4,12 +4,6 @@ namespace App\Providers;
 
 use App\Models\Event;
 use App\Models\JobPosting;
-use App\Models\Conversation;
-use App\Models\Message;
-use App\Models\ForumThread;
-use App\Models\ForumPost;
-use App\Policies\ForumThreadPolicy;
-use App\Policies\ForumPostPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\UserPolicy;
@@ -17,8 +11,6 @@ use App\Policies\EventPolicy;
 use App\Models\User;
 use App\Policies\JobPostingPolicy;
 use App\Policies\ReportPolicy;
-use App\Policies\ConversationPolicy;
-use App\Policies\MessagePolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -32,10 +24,6 @@ class AuthServiceProvider extends ServiceProvider
         Event::class => EventPolicy::class,
         JobPosting::class => JobPostingPolicy::class,
         User::class => ReportPolicy::class,
-        Conversation::class => ConversationPolicy::class,
-        Message::class => MessagePolicy::class,
-        ForumThread::class => ForumThreadPolicy::class,
-        ForumPost::class   => ForumPostPolicy::class,
     ];
 
     /**
@@ -45,31 +33,65 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Define gates for role-based access
-
-        Gate::define('access-admin-dashboard', [UserPolicy::class, 'viewAdminDashboard']);
-        Gate::define('access-alumni-dashboard', [UserPolicy::class, 'viewAlumniDashboard']);
+        // Role-based gates (using closures for simplicity; reference policies if needed)
+        Gate::define('access-admin-dashboard', function ($user) {
+            return $user->hasRole('admin');
+        });
         Gate::define('access-alumni-dashboard', function ($user) {
             return $user->hasRole('alumni');
-            });
-        Gate::define('access-student-dashboard', [UserPolicy::class, 'viewStudentDashboard']);
-        Gate::define('manage-users', [UserPolicy::class, 'manageUsers']);
-        Gate::define('approve-users', [UserPolicy::class, 'approveUsers']);
-        Gate::define('edit-profile', [UserPolicy::class, 'editProfile']);
-        Gate::define('view-pending-approvals', [UserPolicy::class, 'viewPendingApprovals']);
+        });
+        Gate::define('access-student-dashboard', function ($user) {
+            return $user->hasRole('student');
+        });
+        Gate::define('manage-users', function ($user) {
+            return $user->hasRole('admin');
+        });
+        Gate::define('approve-users', function ($user) {
+            return $user->hasRole('admin');
+        });
+        Gate::define('edit-profile', function ($user, $targetUser = null) {
+            return $user->id === $targetUser?->id || $user->hasRole('admin');
+        });
+        Gate::define('view-pending-approvals', function ($user) {
+            return $user->hasRole('admin');
+        });
+        Gate::define('manage-permissions', function ($user) {
+            return $user->hasRole('admin');
+        });
+        Gate::define('generate-reports', function ($user) {
+            return $user->hasRole('admin');
+        });
 
-        Gate::define('create-jobs', [JobPostingPolicy::class, 'create']);
-        Gate::define('edit-jobs', [JobPostingPolicy::class, 'update']);
-        Gate::define('delete-jobs', [JobPostingPolicy::class, 'delete']);
-        Gate::define('view-job-applications', [JobPostingPolicy::class, 'viewApplications']);
-        Gate::define('manage-job-applications', [JobPostingPolicy::class, 'updateApplications']);
+        // Job gates
+        Gate::define('create-jobs', function ($user) {
+            return $user->hasRole('alumni') || $user->hasRole('admin');
+        });
+        Gate::define('viewApplications', function ($user, $job) {
+            return $user->id === $job->user_id || $user->hasRole('admin');
+        });
 
-        Gate::define('generate-reports', [ReportPolicy::class, 'generateReports']);
+        // Event gates
+        Gate::define('view-events', function ($user) {
+            return true; // Public view
+        });
+        Gate::define('create-events', function ($user) {
+            return $user->hasRole('alumni') || $user->hasRole('admin');
+        });
+        Gate::define('rsvp-events', function ($user) {
+            return $user->hasRole('student') || $user->hasRole('alumni');
+        });
 
-        Gate::define('view-events', [EventPolicy::class, 'viewAny']);
-        Gate::define('create-events', [EventPolicy::class, 'create']);
-        Gate::define('edit-events', [EventPolicy::class, 'update']);
-        Gate::define('delete-events', [EventPolicy::class, 'delete']);
-        Gate::define('rsvp-events', [EventPolicy::class, 'rsvp']);
+        // Forum/Mentorship (simple)
+        Gate::define('create-forums', function ($user) {
+            return $user->hasRole('alumni');
+        });
+        Gate::define('view-forums', function ($user) {
+            return true;
+        });
+        Gate::define('create-mentorship', function ($user) {
+            return $user->hasRole('alumni');
+        });Gate::define('view-mentorship', function ($user) {
+            return true;
+        });
     }
 }
