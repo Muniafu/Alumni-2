@@ -13,6 +13,16 @@ class JobPostingPolicy
     use HandlesAuthorization;
 
     /**
+     * Allow admins to bypass all checks.
+     */
+    public function before(User $user, $ability)
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+    }
+
+    /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user)
@@ -35,7 +45,7 @@ class JobPostingPolicy
      */
     public function create(User $user)
     {
-        return $user->hasRole(['admin', 'alumni']);
+        return $user->hasRole( 'alumni');
     }
 
     /**
@@ -43,8 +53,7 @@ class JobPostingPolicy
      */
     public function update(User $user, JobPosting $jobPosting)
     {
-        // Allow the poster of the job posting or an admin to update it
-        return $user->hasRole('admin') || $jobPosting->user_id === $user->id;
+        return $jobPosting->user_id === $user->id;
     }
 
     /**
@@ -52,7 +61,7 @@ class JobPostingPolicy
      */
     public function delete(User $user, JobPosting $jobPosting)
     {
-        return $user->hasRole('admin') || $jobPosting->user_id === $user->id;
+        return $jobPosting->user_id === $user->id;
     }
 
     /**
@@ -61,15 +70,32 @@ class JobPostingPolicy
     public function viewApplications(User $user, JobPosting $jobPosting)
     {
         // Allow the poster of the job posting or an admin to view applications
-        return $user->hasRole('admin') || $jobPosting->user_id === $user->id;
+        return $jobPosting->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can view a specific application.
+     */
+    public function viewApplication(User $user, JobApplication $application)
+    {
+        return $application->jobPosting->user_id === $user->id || $application->user_id === $user->id;
     }
 
     /**
      * Determine whether the user can update applications to the job posting.
      */
-    public function updateApplications(User $user, JobApplication $application)
+    public function updateApplication(User $user, JobApplication $application)
     {
-        // Allow the poster of the job posting or an admin to update applications
-        return $user->hasRole('admin') || $application->job_posting->user_id === $user->id;
+        return $application->jobPosting->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can download resume.
+     */
+    public function downloadResume(User $user, JobApplication $application)
+    {
+        // Allow admin, job poster, or the applicant themselves to download
+        return $application->jobPosting->user_id === $user->id ||
+               $application->user_id === $user->id;
     }
 }

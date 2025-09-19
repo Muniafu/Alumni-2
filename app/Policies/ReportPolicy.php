@@ -7,14 +7,11 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ReportPolicy
 {
-
     use HandlesAuthorization;
 
-    /**
-     * Create a new policy instance.
-     */
-    public function generate(User $user)
+    public function generateReports(User $user)
     {
         return $user->hasRole('admin');
     }
 }
+

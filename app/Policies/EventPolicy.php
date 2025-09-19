@@ -17,7 +17,7 @@ class EventPolicy
     public function viewAny(User $user)
     {
         // Allow all users to view events
-        return $user->hasPermissionTo('view events');
+        return $user->can('view events');
     }
 
     /**
@@ -26,7 +26,7 @@ class EventPolicy
     public function view(User $user, Event $event)
     {
         // Allow all users to view events
-        return $user->hasPermissionTo('create events');
+        return $user->can('view-events');
     }
 
     /**

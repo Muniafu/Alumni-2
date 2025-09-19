@@ -16,7 +16,7 @@ class MentorshipPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        return $user->can('view-mentorship');
     }
 
     public function before(User $user)
@@ -41,7 +41,7 @@ class MentorshipPolicy
      */
     public function create(User $user)
     {
-        //
+        return $user->can('create-mentorship');
     }
 
     /**
