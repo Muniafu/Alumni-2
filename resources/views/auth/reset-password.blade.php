@@ -17,13 +17,13 @@
     <style>
         body {
             font-family: 'Figtree', sans-serif;
-            background: linear-gradient(to bottom right, #eef2ff, #e6f0ff); /* Calm & professional */
+            background: linear-gradient(to bottom right, #eef2ff, #e6f0ff); /* Calm & Trust */
         }
         .card-glass {
             background: rgba(255,255,255,0.85);
             backdrop-filter: blur(12px);
             border-radius: 1rem;
-            border-top: 0.3rem solid #0d6efd; /* Brand color accent */
+            border-top: 0.3rem solid #0d6efd; /* Brand accent */
             box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1);
             transition: transform 0.2s, box-shadow 0.3s;
         }
@@ -42,72 +42,82 @@
         .header-title {
             color: #0d6efd;
         }
+        a {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="d-flex flex-column justify-content-center align-items-center min-vh-100 px-3">
-        <!-- Branding -->
-        <div class="text-center mb-5">
-            <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width: 80px; height: 80px;">
-            <h1 class="h4 fw-bold header-title">Reset Your Password</h1>
-            <p class="text-muted mt-2" style="max-width: 400px; margin: 0 auto;">
-                Create a <span class="text-success fw-semibold">new secure password</span> to keep your account safe and accessible.
-            </p>
-        </div>
+<div class="d-flex flex-column justify-content-center align-items-center min-vh-100 px-3">
 
-        <!-- Reset Card -->
-        <div class="card card-glass p-4 p-md-5 shadow-lg" style="max-width: 500px; width: 100%;">
-            <form method="POST" action="{{ route('password.store') }}">
-                @csrf
-                <input type="hidden" name="token" value="{{ $request->route('token') }}">
-
-                <!-- Email -->
-                <div class="mb-3">
-                    <label for="email" class="form-label fw-semibold text-secondary">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', $request->email) }}" required autofocus
-                        class="form-control form-control-lg @error('email') is-invalid @enderror">
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- New Password -->
-                <div class="mb-3">
-                    <label for="password" class="form-label fw-semibold text-secondary">New Password</label>
-                    <input type="password" id="password" name="password" required
-                        class="form-control form-control-lg @error('password') is-invalid @enderror">
-                    @error('password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- Confirm Password -->
-                <div class="mb-4">
-                    <label for="password_confirmation" class="form-label fw-semibold text-secondary">Confirm Password</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" required
-                        class="form-control form-control-lg @error('password_confirmation') is-invalid @enderror">
-                    @error('password_confirmation')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <!-- Action Button -->
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-brand btn-lg rounded-pill px-4 py-2 shadow">
-                        Reset Password
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Footer -->
-        <footer class="mt-5 text-center text-secondary small">
-            &copy; {{ date('Y') }} Alumni System · Your security is our priority.
-        </footer>
+    <!-- Branding -->
+    <div class="text-center mb-5">
+        <img src="/images/logo.png" alt="Alumni Logo" class="rounded-circle shadow-sm mb-3" style="width: 80px; height: 80px;">
+        <h1 class="h4 fw-bold header-title">Reset Your Password</h1>
+        <p class="text-muted mt-2" style="max-width: 400px; margin: 0 auto;">
+            Enter a new password below to regain access to your account.
+        </p>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Card -->
+    <div class="card card-glass p-4 p-md-5 shadow-lg" style="max-width: 450px; width: 100%;">
+
+        <form method="POST" action="{{ route('password.store') }}">
+            @csrf
+
+            <!-- Hidden Token -->
+            <input type="hidden" name="token" value="{{ $request->route('token') }}">
+
+            <!-- Email Input -->
+            <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email Address</label>
+                <input type="email" name="email" id="email"
+                       class="form-control rounded-pill shadow-sm"
+                       required autofocus autocomplete="username"
+                       placeholder="your@email.com"
+                       value="{{ old('email', $request->email) }}">
+                <x-input-error :messages="$errors->get('email')" class="text-danger mt-1" />
+            </div>
+
+            <!-- Password Input -->
+            <div class="mb-3">
+                <label for="password" class="form-label fw-semibold">New Password</label>
+                <input type="password" name="password" id="password"
+                       class="form-control rounded-pill shadow-sm"
+                       required autocomplete="new-password"
+                       placeholder="Enter new password">
+                <x-input-error :messages="$errors->get('password')" class="text-danger mt-1" />
+            </div>
+
+            <!-- Confirm Password Input -->
+            <div class="mb-3">
+                <label for="password_confirmation" class="form-label fw-semibold">Confirm Password</label>
+                <input type="password" name="password_confirmation" id="password_confirmation"
+                       class="form-control rounded-pill shadow-sm"
+                       required autocomplete="new-password"
+                       placeholder="Confirm new password">
+                <x-input-error :messages="$errors->get('password_confirmation')" class="text-danger mt-1" />
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn btn-brand rounded-pill px-4 py-2 shadow">
+                    Reset Password
+                </button>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 text-center text-secondary small">
+        &copy; {{ date('Y') }} Alumni System · Secure your account.
+    </footer>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

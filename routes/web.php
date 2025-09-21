@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ApprovalController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\JobPostingController;
@@ -18,6 +19,9 @@ use App\Http\Controllers\UserSearchController;
 use App\Http\Controllers\MentorshipController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +48,7 @@ Route::get('/pending-approval', [ApprovalController::class, 'pending'])->name('p
 | Authenticated & Approved Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'approved'])->group(function () {
+Route::middleware(['auth', 'verified', 'approved'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -228,6 +232,37 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::get('/profile', [StudentController::class, 'editProfile'])->name('profile');
         Route::post('/profile/update', [StudentController::class, 'updateProfile'])->name('profile.update');
     });
+
+    // Email Verification Routes
+    Route::get('/email/verify', function () {
+        return view('auth.verify-email');
+    })->middleware('auth')->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect('/dashboard');
+    })->middleware('signed')->name('verification.verify');
+    // Password Confirmation Routes
+    Route::get('/confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
+    Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store']);
+
+    // Forgot Password Routes
+    Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
+        ->middleware('guest')
+        ->name('password.request');
+
+    Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.email');
+
+    // Reset Password Routes
+    Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
+        ->middleware('guest')
+        ->name('password.reset');
+
+    Route::post('/reset-password', [NewPasswordController::class, 'store'])
+        ->middleware('guest')
+        ->name('password.store');
+
 });
 
 // Breeze auth routes

@@ -2,24 +2,34 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Foundation\Auth\Access\Authorizable;
 use App\Models\Profile;
+use App\Models\Mentorship;
+use App\Models\Event;
+use App\Models\JobApplication;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\ForumPost;
 
-class User extends Authenticatable
+/**
+ * @method bool hasRole(string|array $roles)
+ * @method bool hasAnyRole(array|string $roles)
+ * @method bool can(string $ability, array $arguments = [])
+ * @property Profile|null $profile
+ * @property \Illuminate\Database\Eloquent\Collection|Mentorship[] $mentorships
+ * @property \Illuminate\Database\Eloquent\Collection|Mentorship[] $mentorshipRequests
+ */
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, Authorizable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -32,21 +42,11 @@ class User extends Authenticatable
         'approved_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -59,6 +59,26 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function forumThreads()
+    {
+        return $this->hasMany(ForumThread::class, 'user_id');
+    }
+
+    public function forumPosts()
+    {
+        return $this->hasMany(ForumPost::class, 'user_id');
+    }
+
+    public function mentorships()
+    {
+        return $this->hasMany(Mentorship::class, 'mentor_id');
+    }
+
+    public function mentorshipRequests()
+    {
+        return $this->hasMany(Mentorship::class, 'mentee_id');
     }
 
     public function approver()
@@ -76,6 +96,13 @@ class User extends Authenticatable
     public function messages()
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function scopeRole($query, $role)
+    {
+        return $query->whereHas('roles', function ($q) use ($role) {
+            $q->where('name', $role);
+        });
     }
 
     public function scopePendingApproval($query)
@@ -100,17 +127,15 @@ class User extends Authenticatable
 
     public function events()
     {
-        return $this->belongsToMany(Event::class, 'event_user')->withTimestamps();
+        return $this->belongsToMany(Event::class, 'event_rsvps')
+                    ->withPivot('status', 'guests', 'notes')
+                    ->withTimestamps();
     }
+
 
     public function jobApplications()
     {
         return $this->hasMany(JobApplication::class);
-    }
-
-    public function forumPosts()
-    {
-        return $this->hasMany(ForumPost::class);
     }
 
 }
