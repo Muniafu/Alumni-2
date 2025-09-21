@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Notifications\ApplicationStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class JobApplication extends Model
 {
@@ -17,6 +19,11 @@ class JobApplication extends Model
         'resume_path',
         'status',
         'notes',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function job()
@@ -37,9 +44,33 @@ class JobApplication extends Model
             'interviewed' => 'Interviewing',
             'rejected' => 'Not Selected',
             'hired' => 'Hired',
+            'revoked' => 'Revoked',
         ];
 
         return $labels[$this->status] ?? $this->status;
+    }
+
+    public function jobPosting()
+    {
+        return $this->belongsTo(JobPosting::class);
+    }
+
+    protected static function booted()
+    {
+        static::updated(function ($application) {
+            if ($application->isDirty('status')) {
+                $oldStatus = $application->getOriginal('status');
+                $newStatus = $application->status;
+                if ($oldStatus !== $newStatus) {
+                    $applicant = $application->applicant;
+                    $jobPoster = $application->job->poster;
+                    $admins = User::role('admin')->get();
+                    $applicant->notify(new ApplicationStatusChangedNotification($application, $oldStatus));
+                    Notification::send($jobPoster, new ApplicationStatusChangedNotification($application, $oldStatus));
+                    Notification::send($admins, new ApplicationStatusChangedNotification($application, $oldStatus));
+                }
+            }
+        });
     }
 
 }

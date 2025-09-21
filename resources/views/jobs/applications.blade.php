@@ -63,6 +63,7 @@
 
                                     <!-- Actions -->
                                     <td>
+
                                         <a href="{{ route('applications.show', $application) }}" class="btn btn-sm btn-outline-primary me-2">
                                             <i class="fa-solid fa-eye me-1"></i> View
                                         </a>

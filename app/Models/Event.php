@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Notifications\EventStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class Event extends Model
 {
@@ -13,13 +15,14 @@ class Event extends Model
     protected $fillable = [
         'title', 'description', 'start', 'end',
         'location', 'image', 'capacity', 'is_online',
-        'meeting_url', 'user_id',
+        'meeting_url', 'user_id', 'status',
     ];
 
     protected $casts = [
         'start' => 'datetime',
         'end' => 'datetime',
         'is_online' => 'boolean',
+        'status' => 'string',
     ];
 
     /** Relationships **/
@@ -98,5 +101,23 @@ class Event extends Model
     {
         return $query->where('start', '<=', now())
                      ->where('end', '>=', now());
+    }
+
+    protected static function booted()
+    {
+        static::updated(function ($event) {
+            if ($event->isDirty('status')) {
+                $oldStatus = $event->getOriginal('status');
+                $newStatus = $event->status;
+                if ($oldStatus !== $newStatus) {
+                    $organizer = $event->organizer;
+                    $admins = User::role('admin')->get();
+                    $attendees = $event->rsvps()->with('user')->get()->pluck('user');
+                    Notification::send($organizer, new EventStatusChangedNotification($event, $oldStatus, $newStatus));
+                    Notification::send($admins, new EventStatusChangedNotification($event, $oldStatus, $newStatus));
+                    Notification::send($attendees, new EventStatusChangedNotification($event, $oldStatus, $newStatus));
+                }
+            }
+        });
     }
 }

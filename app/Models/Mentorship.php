@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Notifications\MentorshipStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class Mentorship extends Model
 {
@@ -12,15 +14,12 @@ class Mentorship extends Model
     protected $fillable = [
         'mentor_id',
         'mentee_id',
-        'goal',
         'status',
-        'start_date',
-        'end_date',
+        'notes',
     ];
 
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'status' => 'string',
     ];
 
     public function mentor()
@@ -33,19 +32,22 @@ class Mentorship extends Model
         return $this->belongsTo(User::class, 'mentee_id');
     }
 
-    public function scopeActive($query)
+    protected static function booted()
     {
-        return $query->where('status', 'active');
+        static::updated(function ($mentorship) {
+            if ($mentorship->isDirty('status')) {
+                $oldStatus = $mentorship->getOriginal('status');
+                $newStatus = $mentorship->status;
+                if ($oldStatus !== $newStatus) {
+                    $mentor = $mentorship->mentor;
+                    $mentee = $mentorship->mentee;
+                    $admins = User::role('admin')->get();
+                    Notification::send($mentor, new MentorshipStatusChangedNotification($mentorship, $newStatus));
+                    Notification::send($mentee, new MentorshipStatusChangedNotification($mentorship, $newStatus));
+                    Notification::send($admins, new MentorshipStatusChangedNotification($mentorship, $newStatus));
+                }
+            }
+        });
     }
 
-    public function scopeForMentor($query, $userId)
-    {
-        return $query->where('mentor_id', $userId);
-    }
-
-    public function scopeForMentee($query, $userId)
-    {
-        return $query->where('mentee_id', $userId);
-    }
-    
 }

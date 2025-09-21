@@ -16,6 +16,19 @@ class ForumCategory extends Model
         return $this->hasMany(ForumThread::class)->latest();
     }
 
+    // Posts through threads
+    public function posts()
+    {
+        return $this->hasManyThrough(
+            ForumPost::class,
+            ForumThread::class,
+            'forum_category_id', // Foreign key on threads table
+            'forum_thread_id',   // Foreign key on posts table
+            'id',                // Local key on categories table
+            'id'                 // Local key on threads table
+        );
+    }
+
     public function getThreadCountAttribute()
     {
         return $this->threads()->count();
@@ -23,7 +36,7 @@ class ForumCategory extends Model
 
     public function getPostCountAttribute()
     {
-        return ForumPost::whereIn('forum_thread_id', $this->threads()->pluck('id'))->count();
+        return $this->posts()->count();
     }
 
     public function getLatestThreadAttribute()

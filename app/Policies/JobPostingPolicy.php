@@ -20,6 +20,9 @@ class JobPostingPolicy
         if ($user->hasRole('admin')) {
             return true;
         }
+
+        // Return null to continue with other policies
+        return null;
     }
 
     /**
@@ -78,7 +81,9 @@ class JobPostingPolicy
      */
     public function viewApplication(User $user, JobApplication $application)
     {
-        return $application->jobPosting->user_id === $user->id || $application->user_id === $user->id;
+        return $user->hasRole('admin') ||
+           $application->jobPosting->user_id === $user->id ||
+           $application->user_id === $user->id;
     }
 
     /**
@@ -95,7 +100,8 @@ class JobPostingPolicy
     public function downloadResume(User $user, JobApplication $application)
     {
         // Allow admin, job poster, or the applicant themselves to download
-        return $application->jobPosting->user_id === $user->id ||
-               $application->user_id === $user->id;
+        return $user->hasRole('admin') ||
+           $application->jobPosting->user_id === $user->id ||
+           $application->user_id === $user->id;
     }
 }

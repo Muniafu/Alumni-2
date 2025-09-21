@@ -5,7 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Notifications\JobNotification;
+use App\Models\User;
+use App\Models\JobApplication;
+use App\Notifications\JobStatusChangedNotification;
+use Illuminate\Support\Facades\Notification;
 
 class JobPosting extends Model
 {
@@ -111,20 +114,31 @@ class JobPosting extends Model
     protected static function booted()
     {
         static::created(function ($job) {
-            // 🔔 Notify only approved students
-            $students = \App\Models\User::query()
-                ->where('is_approved', true)
-                ->whereHas('roles', fn($q) => $q->where('name', 'student'))
-                ->get();
+            $students = User::where('is_approved', true)->whereHas('roles', fn($q) => $q->where('name', 'student'))->get();
+            $admins = User::role('admin')->get();
+            Notification::send($students->merge($admins), new \App\Notifications\NewJobPostedNotification($job));
+        });
 
-            // 🔔 Notify admins
-            $admins = \App\Models\User::role('admin')->get();
+        static::deleted(function ($job) {
+            $allUsers = User::where('is_approved', true)->whereHas('roles', fn($q) => $q->whereIn('name', ['alumni', 'student', 'admin']))->get();
+            $applicants = $job->applications()->with('applicant')->get()->pluck('applicant');
+            $deletedBy = auth()->check() ? auth()->user()->name : 'System';
+            Notification::send($allUsers->merge($applicants)->unique('id'), new \App\Notifications\JobDeletedNotification($job->title, $deletedBy));
+        });
 
-            \Illuminate\Support\Facades\Notification::send(
-                $students->merge($admins),
-                new \App\Notifications\NewJobPostedNotification($job)
-            );
+        static::updated(function ($job) {
+            if ($job->isDirty('is_active')) {
+                $oldStatus = $job->getOriginal('is_active') ? 'active' : 'inactive';
+                $newStatus = $job->is_active ? 'active' : 'inactive';
+                if ($oldStatus !== $newStatus) {
+                    $poster = $job->poster;
+                    $admins = User::role('admin')->get();
+                    $applicants = $job->applications()->with('applicant')->get()->pluck('applicant');
+                    Notification::send($poster, new JobStatusChangedNotification($job, $oldStatus, $newStatus));
+                    Notification::send($admins, new JobStatusChangedNotification($job, $oldStatus, $newStatus));
+                    Notification::send($applicants, new JobStatusChangedNotification($job, $oldStatus, $newStatus));
+                }
+            }
         });
     }
-
 }
