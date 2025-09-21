@@ -20,6 +20,8 @@ class ProfileDetailsRequest extends FormRequest
             'twitter' => ['nullable', 'url', 'max:255'],
             'github' => ['nullable', 'url', 'max:255'],
             'website' => ['nullable', 'url', 'max:255'],
+            'education' => ['nullable', 'string', 'max:255'],
+            'certifications' => ['nullable', 'string']
         ];
     }
 }

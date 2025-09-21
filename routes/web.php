@@ -103,6 +103,8 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         ->middleware(['auth'])
         ->name('applications.resume.download');
     Route::get('/resume/{filename}', [JobPostingController::class, 'downloadResume'])->name('resume.download');
+    Route::get('/jobs/{application}/download-resume', [JobPostingController::class, 'downloadResume'])->name('jobs.downloadResume')->middleware(['web', 'auth', 'verified', 'approved']);
+    Route::put('/jobs/{job}/applications/{application}', [JobPostingController::class, 'updateApplicationStatus'])->name('jobs.applications.update');
 
     /*
     |-----------------------------

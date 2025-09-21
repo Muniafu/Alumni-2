@@ -33,6 +33,14 @@
                         <p class="text-muted small mb-1">Email</p>
                         <p class="fw-medium">{{ $user->email }}</p>
                     </div>
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-1">Education</p>
+                        <p class="fw-medium">{{ $user->profile->education ?? 'Not provided' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="text-muted small mb-1">Certifications</p>
+                        <p class="fw-medium">{{ $user->profile->certifications ? implode(', ', $user->profile->certifications_array) : 'Not provided' }}</p>
+                    </div>
                 </div>
             </div>
         </div>

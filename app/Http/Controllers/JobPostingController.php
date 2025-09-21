@@ -275,21 +275,25 @@ class JobPostingController extends Controller
     public function showApplication(JobApplication $application)
     {
         // Authorize access to view this application
-        $this->authorize('viewApplication', $application);
+        $this->authorize('view', $application);
 
         // Load relationships
         $application->load(['jobPosting', 'applicant.profile']);
 
-        return view('jobs.application-show', compact('application'));
+        $job = $application->jobPosting;
+
+        return view('jobs.application-show', compact('application', 'job'));
     }
 
     /**
      * UpdateApplications the specified resource in storage.
      */
-    public function updateApplicationStatus(Request $request, JobApplication $application)
+    /**
+     * Update application status.
+     */
+    public function updateApplicationStatus(Request $request, JobPosting $job, JobApplication $application)
     {
-
-        Gate::authorize('updateApplication', $application);
+        $this->authorize('update', $application);
 
         $validated = $request->validate([
             'status' => 'required|in:submitted,reviewed,interviewed,rejected,hired',
@@ -299,17 +303,16 @@ class JobPostingController extends Controller
         $oldStatus = $application->status;
         $application->update($validated);
 
-        // Notify student if status changed significantly
         if ($oldStatus !== $application->status && in_array($application->status, ['interviewed', 'hired', 'rejected'])) {
             $application->applicant->notify(new ApplicationStatusChangedNotification($application, $oldStatus));
         }
 
-        return back()->with('success', 'Application status updated');
+        return redirect()->back()->with('success', 'Application status updated');
     }
 
     public function downloadResume(JobApplication $application)
     {
-        $this->authorize('view', $application); // Only authorized users
+        $this->authorize('downloadResume', $application); // Only authorized users
 
         $disk = Storage::disk('private'); /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
 

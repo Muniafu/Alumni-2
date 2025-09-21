@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Event;
 use App\Models\JobPosting;
+use App\Models\JobApplication;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use App\Policies\UserPolicy;
@@ -11,6 +12,7 @@ use App\Policies\EventPolicy;
 use App\Models\User;
 use App\Policies\JobPostingPolicy;
 use App\Policies\ReportPolicy;
+use App\Policies\JobApplicationPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Event::class => EventPolicy::class,
         JobPosting::class => JobPostingPolicy::class,
+        JobApplication::class => JobApplicationPolicy::class,
         User::class => ReportPolicy::class,
     ];
 

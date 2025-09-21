@@ -16,6 +16,8 @@ use App\Models\ForumThread;
 use App\Models\JobApplication;
 use App\Models\JobPosting;
 use App\Models\Message;
+use App\Models\Mentorship;
+use App\Models\MentorshipRequest;
 use App\Models\Conversation;
 use Spatie\Permission\Models\Permission;
 use App\Notifications\UserApprovedNotification;
@@ -112,6 +114,16 @@ class AdminController extends Controller
         ];
 
         // -----------------------------
+        // Mentorship Statistics (New in 2025 update)
+        // -----------------------------
+        $mentorshipStats = [
+            'total' => Mentorship::count(),
+            'active' => Mentorship::where('status', 'active')->count(),
+            'requests' => MentorshipRequest::count(),
+            'pending_requests' => MentorshipRequest::where('status', 'pending')->count(),
+        ];
+
+        // -----------------------------
         // Recent Platform Activities
         // -----------------------------
         $events = Event::with('organizer')->latest()->limit(3)->get();
@@ -121,6 +133,8 @@ class AdminController extends Controller
         $recentActivities = $events->concat($jobs)->concat($threads)
             ->sortByDesc('created_at')
             ->take(5);
+
+
 
         // -----------------------------
         // Return view with all data
@@ -133,6 +147,7 @@ class AdminController extends Controller
             'jobStats',
             'forumStats',
             'messagingStats',
+            'mentorshipStats',
             'recentActivities'
         ));
     }
@@ -451,6 +466,113 @@ class AdminController extends Controller
 
 
         return back()->with('success', 'Permissions updated successfully');
+    }
+
+    // Event Management Functions
+    public function eventsIndex()
+    {
+        Gate::authorize('generate-reports');
+
+        $events = Event::with('organizer')->latest()->paginate(15);
+
+        return view('admin.events.index', compact('events'));
+    }
+
+    public function eventsCreate()
+    {
+        Gate::authorize('create-events');
+
+        return view('admin.events.create');
+    }
+
+    public function eventsStore(Request $request)
+    {
+        Gate::authorize('create-events');
+
+        // Validation and creation logic (delegate to EventController if possible, but for admin-specific)
+        $validated = $request->validate([
+            // Same as EventController::store
+        ]);
+
+        $event = Event::create($validated + ['user_id' => auth()->id()]);
+
+        return redirect()->route('admin.events.index')->with('success', 'Event created');
+    }
+
+    public function eventsEdit(Event $event)
+    {
+        Gate::authorize('update', $event);
+
+        return view('admin.events.edit', compact('event'));
+    }
+
+    public function eventsUpdate(Request $request, Event $event)
+    {
+        Gate::authorize('update', $event);
+
+        // Validation and update
+        $validated = $request->validate([
+            // Same as EventController::update
+        ]);
+
+        $event->update($validated);
+
+        return redirect()->route('admin.events.index')->with('success', 'Event updated');
+    }
+
+    public function eventsDestroy(Event $event)
+    {
+        Gate::authorize('delete', $event);
+
+        $event->delete();
+
+        return redirect()->route('admin.events.index')->with('success', 'Event deleted');
+    }
+
+    // New: Job Management Functions (similar structure)
+    public function jobsIndex()
+    {
+        Gate::authorize('generate-reports');
+
+        $jobs = JobPosting::with('poster')->latest()->paginate(15);
+
+        return view('admin.jobs.index', compact('jobs'));
+    }
+
+    // Add create, store, edit, update, destroy for jobs similarly
+
+    // New: Forum Management
+    public function forumsIndex()
+    {
+        Gate::authorize('generate-reports');
+
+        $threads = ForumThread::with('author')->latest()->paginate(15);
+
+        return view('admin.forums.index', compact('threads'));
+    }
+
+    // Add moderation functions like lock thread, delete post, etc.
+
+    // New: Mentorship Management
+    public function mentorshipsIndex()
+    {
+        Gate::authorize('generate-reports');
+
+        $mentorships = Mentorship::with(['mentor', 'mentee'])->latest()->paginate(15);
+
+        return view('admin.mentorships.index', compact('mentorships'));
+    }
+
+    // Add update status, etc.
+
+    // New: Messaging Oversight (e.g., view all conversations for moderation)
+    public function messagesIndex()
+    {
+        Gate::authorize('generate-reports');
+
+        $conversations = Conversation::latest()->paginate(15);
+
+        return view('admin.messages.index', compact('conversations'));
     }
 
 }

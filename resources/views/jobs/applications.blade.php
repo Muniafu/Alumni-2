@@ -41,7 +41,7 @@
                                         </div>
                                     </td>
 
-                                    <!-- Status Badge -->
+                                    <!-- Status Badge with Update Form -->
                                     <td>
                                         @php
                                             $statusClass = match($application->status) {
@@ -54,6 +54,19 @@
                                             };
                                         @endphp
                                         <span class="{{ $statusClass }}">{{ ucfirst($application->status) }}</span>
+                                        @can('update', $application)
+                                            <form action="{{ route('jobs.applications.update', [$job, $application]) }}" method="POST" style="display:inline;" class="ms-2">
+                                                @csrf
+                                                @method('PUT')
+                                                <select name="status" class="form-select form-select-sm d-inline-block w-auto" onchange="this.form.submit()">
+                                                    <option value="submitted" {{ $application->status === 'submitted' ? 'selected' : '' }}>Submitted</option>
+                                                    <option value="reviewed" {{ $application->status === 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+                                                    <option value="interviewed" {{ $application->status === 'interviewed' ? 'selected' : '' }}>Interviewed</option>
+                                                    <option value="hired" {{ $application->status === 'hired' ? 'selected' : '' }}>Hired</option>
+                                                    <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                                </select>
+                                            </form>
+                                        @endcan
                                     </td>
 
                                     <!-- Applied Date -->
@@ -63,19 +76,16 @@
 
                                     <!-- Actions -->
                                     <td>
-
                                         <a href="{{ route('applications.show', $application) }}" class="btn btn-sm btn-outline-primary me-2">
                                             <i class="fa-solid fa-eye me-1"></i> View
                                         </a>
-                                        <td>
-                                            @can('view', $application)
-                                                <a href="{{ route('resume.download', $application->resume_path) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fa-solid fa-download me-1"></i> Resume
-                                                </a>
-                                            @else
-                                                <span class="text-muted">No access</span>
-                                            @endcan
-                                        </td>
+                                        @can('downloadResume', $application)
+                                            <a href="{{ route('jobs.downloadResume', $application) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa-solid fa-download me-1"></i> Resume
+                                            </a>
+                                        @else
+                                            <span class="text-muted">No access</span>
+                                        @endcan
                                     </td>
                                 </tr>
                                 @endforeach

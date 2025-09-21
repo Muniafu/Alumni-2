@@ -113,6 +113,8 @@ class AlumniController extends Controller
             'website' => ['nullable', 'url'],
             'skills' => ['nullable', 'string'],
             'interests' => ['nullable', 'string'],
+            'education' => ['nullable', 'string', 'max:255'],
+            'certifications' => ['nullable', 'string'],
         ]);
 
         $user->update(['name' => $validated['name']]);
@@ -168,6 +170,10 @@ class AlumniController extends Controller
                 : [],
             'interests' => isset($data['interests'])
                 ? array_filter(array_map('trim', explode(',', $data['interests'])))
+                : [],
+            'education' => $data['education'],
+            'certifications' => isset($data['certifications'])
+                ? array_filter(array_map('trim', explode(',', $data['certifications'])))
                 : [],
         ];
     }

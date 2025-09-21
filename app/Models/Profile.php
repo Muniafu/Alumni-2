@@ -22,6 +22,8 @@ class Profile extends Model
         'skills',
         'interests',
         'profile_completion',
+        'education',
+        'certifications',
     ];
 
     protected $attributes = [
@@ -29,6 +31,8 @@ class Profile extends Model
         'skills' => '',
         'interests' => '',
         'profile_completion' => 0,
+        'education' => null,
+        'certifications' => '',
     ];
 
     /**
@@ -70,9 +74,66 @@ class Profile extends Model
         $this->attributes['interests'] = is_array($value) ? implode(',', $value) : $value;
     }
 
+    /**
+     * Get a single social link by key
+     */
+    public function getSocialLink(string $key): ?string
+    {
+        $links = $this->social_links ? explode(',', $this->social_links) : [];
+
+        // Assuming links are stored as key=value pairs like "linkedin=https://...,twitter=..."
+        foreach ($links as $link) {
+            [$k, $v] = array_pad(explode('=', $link, 2), 2, null);
+            if ($k === $key) return $v;
+        }
+
+        return null;
+    }
+
+    /**
+     * Set a single social link by key
+     */
+    public function setSocialLink(string $key, string $value): void
+    {
+        $links = $this->social_links ? explode(',', $this->social_links) : [];
+        $updated = false;
+
+        foreach ($links as &$link) {
+            [$k, $v] = array_pad(explode('=', $link, 2), 2, null);
+            if ($k === $key) {
+                $link = "$key=$value";
+                $updated = true;
+                break;
+            }
+        }
+
+        if (!$updated) {
+            $links[] = "$key=$value";
+        }
+
+        $this->social_links = implode(',', $links);
+        $this->save();
+    }
+
     public function setSocialLinksAttribute($value)
     {
         $this->attributes['social_links'] = is_array($value) ? implode(',', $value) : $value;
+    }
+
+    /**
+     * Accessor for certifications array
+     */
+    public function getCertificationsArrayAttribute(): array
+    {
+        return $this->certifications ? explode(',', $this->certifications) : [];
+    }
+
+    /**
+     * Mutator for certifications
+     */
+    public function setCertificationsAttribute($value)
+    {
+        $this->attributes['certifications'] = is_array($value) ? implode(',', $value) : $value;
     }
 
     /**
@@ -83,8 +144,8 @@ class Profile extends Model
         $completedFields = 0;
 
         $userFields = ['name', 'email'];
-        $profileFields = ['phone', 'address', 'current_job', 'company', 'bio'];
-        $arrayFields = ['skills', 'interests', 'social_links'];
+        $profileFields = ['phone', 'address', 'current_job', 'company', 'bio', 'education'];
+        $arrayFields = ['skills', 'interests', 'social_links', 'certifications'];
 
         foreach ($userFields as $field) {
             if (!empty($this->user->$field)) $completedFields++;

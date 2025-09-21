@@ -47,7 +47,10 @@
                         <h5 class="mb-0">Profile Information</h5>
                     </div>
                     <div class="card-body">
-                        @include('profile.partials.update-profile-information-form')
+                        @include('profile.partials.update-profile-information-form', [
+                            'education' => old('education', $user->profile->education ?? ''),
+                            'certifications' => old('certifications', implode(', ', $user->profile->certifications_array ?? []))
+                        ])
                     </div>
                 </div>
             </div>

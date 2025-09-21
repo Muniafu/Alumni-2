@@ -56,7 +56,7 @@
                 <!-- Resume Download -->
                 <h4 class="text-dark fw-semibold mb-3">Resume</h4>
                 <div class="mb-4">
-                    <a href="{{ Storage::disk('public')->url($application->resume_path) }}" target="_blank" class="btn btn-primary">
+                    <a href="{{ route('jobs.downloadResume', $application) }}"class="btn btn-primary">
                         <i class="fa-solid fa-download me-2"></i> Download Resume
                     </a>
                 </div>

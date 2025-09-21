@@ -114,6 +114,29 @@
                         </div>
                     </div>
 
+                    <!-- Education & Certifications -->
+                    <div class="col-12">
+                        <h5 class="fw-semibold text-dark mb-3">Education & Certifications</h5>
+
+                        <div class="mb-3">
+                            <label for="education" class="form-label">Education (e.g., Degree, Institution)</label>
+                            <input id="education" type="text"
+                                   class="form-control @error('education') is-invalid @enderror"
+                                   name="education" value="{{ old('education', $user->profile->education ?? '') }}">
+                            @error('education') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="certifications" class="form-label">Certifications (comma separated)</label>
+                            <input id="certifications" type="text"
+                                   class="form-control @error('certifications') is-invalid @enderror"
+                                   name="certifications"
+                                   value="{{ old('certifications', implode(', ', $user->profile->certifications_array ?? [])) }}"
+                                   placeholder="e.g., PMP, AWS Certified, Google Analytics">
+                            @error('certifications') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
+
                     {{-- Professional Details --}}
                     <div class="col-12">
                         <h5 class="fw-semibold text-dark mb-3">Professional Details</h5>

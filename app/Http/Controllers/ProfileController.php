@@ -75,6 +75,7 @@ class ProfileController extends Controller
         // Convert comma-separated inputs to array for mutators
         $data['skills'] = isset($data['skills']) ? array_map('trim', explode(',', $data['skills'])) : [];
         $data['interests'] = isset($data['interests']) ? array_map('trim', explode(',', $data['interests'])) : [];
+        $data['certifications'] = isset($data['certifications']) ? array_map('trim', explode(',', $data['certifications'])) : [];
 
         // Social links array
         $socialLinks = [
